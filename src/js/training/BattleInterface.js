@@ -58,6 +58,12 @@ var BattlerMaster = (function () {
 				turn = 0;
 				time = 0;
 
+				console.log("battle",b,"players",p,"properties", props)
+				players = p;
+				teamsUno = players[0].getTeam()
+				shields = players[0].getShields()
+				teamsDos = players[1].getTeam()
+
 				// Event listeners
 				if(! listenersInitialized){
 					$(".battle-window").on("click", battleWindowClick);
@@ -72,7 +78,21 @@ var BattlerMaster = (function () {
 					$("body").on("click", ".modal .no", closeModalWindow);
 					$("body").on("click", ".modal .restart-confirm .yes", replayBattleClick);
 					$("body").on("click", ".modal .quit-confirm .yes", confirmQuitBattle);
-
+					$("#AtaqueRapido").on("click", function(){
+						battleWindowClick();
+					})
+					$("#Escudo").on("click", function(){
+						useShieldClick();
+					})
+					$("#NotEscudo").on("click", function(){
+						closeShieldClick();
+					})
+					$("#AtaqueCargado1").on("click", function(){
+						console.log($("move-bars"))
+					})
+					$("#AtaqueCargado2").on("click", function(){
+						closeShieldClick();
+					})
 					listenersInitialized = true;
 				}
 
@@ -100,7 +120,7 @@ var BattlerMaster = (function () {
 				//$(".team-indicator .cmp").eq(priorityAssignment).show();
 
 				// Set lead pokemon
-				battle.setBattleMode("emulate");
+				battle.setBattleMode("simulate");
 				battle.setTurns(1);
 				battle.setPlayers(players);
 				battle.setNewPokemon(players[0].getTeam()[0], 0, false);
@@ -133,6 +153,35 @@ var BattlerMaster = (function () {
 				turn = response.turn;
 				time += 500;
 
+				// States of the battle
+				//if (phase != "game_paused"){
+				//	
+				//	console.log("response",response)
+				//	console.log("Turno", response.turn)
+				//	console.log("Team del jugador 1", teamsUno)
+				//	console.log("Equipo del jugador 1", teamsUno[0].aliasId, 
+				//				"Hp", Math.floor(teamsUno[0].hp/10), "Energia", Math.floor(teamsUno[0].energy/10))
+				//	//console.log("Equipo del jugador 1", teamsUno[1].aliasId,
+				//	//			"Hp", teamsUno[1].hp, "Energia", teamsUno[1].energy)
+				//	//console.log("Equipo del jugador 1", teamsUno[2].aliasId,
+				//	//			"Hp", teamsUno[2].hp, "Energia", teamsUno[2].energy)
+				//	console.log("Pokemon Actual", response.pokemon[0].aliasId)
+				//	console.log("Escudos", shields)
+				//	console.log("Team del jugador 2", teamsDos)
+				//	console.log("Team del jugador 2", teamsDos[0].aliasId,
+				//				"Hp", Math.floor(teamsDos[0].hp), "Energia", Math.floor(teamsDos[0].energy))
+				//	//console.log("Team del jugador 2", teamsDos[1].aliasId,
+				//	//			"Hp", teamsDos[1].hp, "Energia", teamsDos[1].energy)
+				//	//console.log("Team del jugador 2", teamsDos[2].aliasId,
+				//	//			"Hp", teamsDos[2].hp, "Energia", teamsDos[2].energy)
+				//	console.log("Pokemon Actual", response.pokemon[1].aliasId)
+				//						
+				//	console.log(response);
+				//	console.log(response.player)
+				//}
+		
+				//console.log(response?.pokemon[0]);
+				
 				// Interpret phase for player
 
 				if(response.phase == "suspend_charged"){

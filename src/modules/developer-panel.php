@@ -11,6 +11,17 @@
 		<a class="button dev-moveset-csv" href="#">Generate Moveset CSV</a>
 		<!--<a class="button dev-validate-family" href="#">Validate Family IDs</a>-->
 
+
+		<h4> Acciones<h4>
+		<a class="button " id="AtaqueRapido" href="#">Ataque rapido</a>
+		<a class="button " id="Escudo" href="#">Usar Escudo</a>
+		<a class="button " id="NotEscudo" href="#">No usar EScudo</a>
+		<a class="button " id="AtaqueCargado1" href="#">Ataque Cargado 1</a>
+		<a class="button " id="AtaqueCargado2" href="#">Ataque Cargado 2</a>
+		<a class="button " id="CambioPokemon1" href="#">Cambio Pokemon 1</a>
+		<a class="button " id="CambioPokemon2" href="#">Cambio Pokemon 2</a>
+		
+		
 		<h4>Quick Links</h4>
 		<a class="button" href="<?php echo $WEB_ROOT; ?>data/overrideEditor.php">Override Editor</a>
 		<a class="button" href="<?php echo $WEB_ROOT; ?>ranker.php">Ranker</a>

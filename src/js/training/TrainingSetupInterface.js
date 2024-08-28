@@ -281,9 +281,12 @@ var InterfaceMaster = (function () {
 			function selectMode(e){
 				partySize = 3;
 				mode = $(".mode-select option:selected").val();
-
+				if (mode == "1v1"){
+					partySize = 1;
+					mode = "single"
+				}
  				if(mode == "tournament"){
-					partySize = 6;
+					partySize = 3;
 				}
 
 				for(var i = 0; i < multiSelectors.length; i++){

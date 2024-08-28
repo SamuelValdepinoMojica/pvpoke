@@ -31,6 +31,7 @@ require_once '../header.php';
 			<select class="mode-select">
 				<option value="single">Single (3v3)</option>
 				<option value="tournament">Tournament (6v6)</option>
+				<option value="1v1">Pokemon (1v1)</option>
 			</select>
 			<h3 class="section-title">League &amp; Cup</h3>
 			<select class="league-cup-select">
