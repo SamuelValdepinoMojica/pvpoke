@@ -19,6 +19,7 @@ function MatchHandler(){
 	this.init = function(){
 		gm = GameMaster.getInstance();
 		interface = InterfaceMaster.getInstance(self);
+		console.log(interface);
 		battler = BattlerMaster.getInstance(self, battle);
 	}
 

@@ -2,6 +2,7 @@
 * Interface functionality for move list and explorer
 */
 
+
 var BattlerMaster = (function () {
     var instance;
 
@@ -79,19 +80,28 @@ var BattlerMaster = (function () {
 					$("body").on("click", ".modal .restart-confirm .yes", replayBattleClick);
 					$("body").on("click", ".modal .quit-confirm .yes", confirmQuitBattle);
 					$("#AtaqueRapido").on("click", function(){
-						battleWindowClick();
+						ACCIONES = "fast";
+						
 					})
 					$("#Escudo").on("click", function(){
-						useShieldClick();
+						ACCIONES = "shield";
 					})
 					$("#NotEscudo").on("click", function(){
-						closeShieldClick();
+						ACCIONES = "no_shield";
 					})
 					$("#AtaqueCargado1").on("click", function(){
-						console.log($("move-bars"))
+						ACCIONES = "charged1";
 					})
 					$("#AtaqueCargado2").on("click", function(){
-						closeShieldClick();
+						ACCIONES = "charged2";
+					})
+					$("#switch1").on("click", function(){
+
+						ACCIONES = "switch1";
+						console.log("ACCIONES", ACCIONES)
+					})
+					$("#switch2").on("click", function(){
+						ACCIONES = "switch2";
 					})
 					listenersInitialized = true;
 				}
@@ -120,7 +130,7 @@ var BattlerMaster = (function () {
 				//$(".team-indicator .cmp").eq(priorityAssignment).show();
 
 				// Set lead pokemon
-				battle.setBattleMode("simulate");
+				battle.setBattleMode("emulate");
 				battle.setTurns(1);
 				battle.setPlayers(players);
 				battle.setNewPokemon(players[0].getTeam()[0], 0, false);
@@ -150,8 +160,14 @@ var BattlerMaster = (function () {
 			// Given an update object, update the battle interface
 
 			this.update = function(response){
+				// if(IS_GAME_PAUSED){
+				// 	return;
+				// }
 				turn = response.turn;
 				time += 500;
+
+				
+					
 
 				// States of the battle
 				//if (phase != "game_paused"){

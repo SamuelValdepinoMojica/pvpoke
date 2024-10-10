@@ -105,6 +105,15 @@ require_once '../header.php';
 	</button>
 </div>
 
+<div class="section">
+	<button class="battle-btn-fast button">
+		<span class="btn-content-wrap">
+			<span class="btn-icon btn-icon-train"></span>
+			<span class="btn-label">Train Fast</span>
+		</span>
+	</button>
+</div>
+
 <div class="section team-select">
 	<a class="return-to-setup" href="#">&larr; Team Select &amp; Setup</a>
 	<div class="opponent">
@@ -126,6 +135,8 @@ require_once '../header.php';
 	</div>
 	<button class="lets-go-btn button">Let's Go!</button>
 </div>
+
+<button class="toggle-pause button">Toggle pause</button>
 
 <div class="section battle">
 	<div class="battle-window">
@@ -152,6 +163,14 @@ require_once '../header.php';
 <script src="<?php echo $WEB_ROOT; ?>js/pokemon/Pokemon.js?v=<?php echo $SITE_VERSION; ?>"></script>
 <script src="<?php echo $WEB_ROOT; ?>js/pokemon/Player.js?v=<?php echo $SITE_VERSION; ?>"></script>
 <script src="<?php echo $WEB_ROOT; ?>js/training/TrainingSetupInterface.js?v=<?php echo $SITE_VERSION; ?>"></script>
+<script>
+	$('.toggle-pause').on('click', function(e){
+		console.log('I_WANT_PAUSE', I_WANT_PAUSE);
+		I_WANT_PAUSE = ! I_WANT_PAUSE;
+		console.log('I_WANT_PAUSE', I_WANT_PAUSE);
+
+	});
+</script>
 <script src="<?php echo $WEB_ROOT; ?>js/training/BattleInterface.js?v=<?php echo $SITE_VERSION; ?>"></script>
 <script src="<?php echo $WEB_ROOT; ?>js/training/DecisionOption.js?v=<?php echo $SITE_VERSION; ?>"></script>
 <script src="<?php echo $WEB_ROOT; ?>js/training/TrainingAI.js?v=<?php echo $SITE_VERSION; ?>"></script>

@@ -2,6 +2,11 @@
 * Interface functionality for move list and explorer
 */
 // Load AI archetypes
+var TIEMPO_EJECUCION = 500;
+var IS_GAME_PAUSED = false;
+var ACCIONES = "default";
+var I_WANT_PAUSE = false;
+var IS_VALID = false;
 
 var file = webRoot+"data/training/teams/featured/featured-july.json?v=1";
 var featuredTeams = [];
@@ -64,7 +69,18 @@ var InterfaceMaster = (function () {
 				$(".mode-select").on("change", selectMode);
 				$(".team-method-select").on("change", selectTeamMethod);
 				$(".featured-team-select").on("change", selectFeaturedTeam);
-				$(".battle-btn").on("click", startBattle);
+				$(".battle-btn").on("click", function(){
+					console.log("TIEMPO_DE_EJECCION:", TIEMPO_EJECUCION);
+					TIEMPO_EJECUCION = 500;
+					console.log("TIEMPO_EJECUCION:", TIEMPO_EJECUCION);
+					startBattle();
+				});
+				$(".battle-btn-fast").on("click", function(){
+					console.log("TIEMPO_EJECUCION:", TIEMPO_EJECUCION);
+					TIEMPO_EJECUCION = 250;
+					console.log("TIEMPO_EJECUCION:", TIEMPO_EJECUCION);
+					startBattle();
+				});
 				$(".lets-go-btn").on("click", startTournamentBattle);
 				$("a.return-to-setup").on("click", returnToSetup);
 				$("body").on("click", ".self .roster .pokemon", selectRosterPokemon);
@@ -286,7 +302,7 @@ var InterfaceMaster = (function () {
 					mode = "single"
 				}
  				if(mode == "tournament"){
-					partySize = 3;
+					partySize = 6;
 				}
 
 				for(var i = 0; i < multiSelectors.length; i++){
@@ -528,6 +544,7 @@ var InterfaceMaster = (function () {
 					$(".mode-select option[value=\"single\"]").prop("selected","selected");
 					$(".mode-select option[value=\"tournament\"]").prop("disabled","disabled");
 					$(".mode-select").trigger("change");
+					
 				} else{
 					$(".mode-select option[value=\"tournament\"]").prop("disabled","");
 				}

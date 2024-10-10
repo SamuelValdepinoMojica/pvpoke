@@ -18,8 +18,8 @@
 		<a class="button " id="NotEscudo" href="#">No usar EScudo</a>
 		<a class="button " id="AtaqueCargado1" href="#">Ataque Cargado 1</a>
 		<a class="button " id="AtaqueCargado2" href="#">Ataque Cargado 2</a>
-		<a class="button " id="CambioPokemon1" href="#">Cambio Pokemon 1</a>
-		<a class="button " id="CambioPokemon2" href="#">Cambio Pokemon 2</a>
+		<a class="button " id="switch1" href="#">Cambio Pokemon 1</a>
+		<a class="button " id="switch2" href="#">Cambio Pokemon 2</a>
 		
 		
 		<h4>Quick Links</h4>

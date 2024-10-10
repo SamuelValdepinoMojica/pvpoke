@@ -2690,6 +2690,7 @@ var InterfaceMaster = (function () {
 
 				if(sandbox){
 					actions = battle.getActions();
+					console.log(actions);
 
 					// Give both Pokemon access to shields
 
