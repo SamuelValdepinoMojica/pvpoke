@@ -2,11 +2,13 @@
 * Interface functionality for move list and explorer
 */
 // Load AI archetypes
-var TIEMPO_EJECUCION = 500;
-var IS_GAME_PAUSED = false;
-var ACCIONES = "default";
-var I_WANT_PAUSE = false;
-var IS_VALID = false;
+var TIEMPO_EJECUCION 	= 500;
+var IS_GAME_PAUSED 		= false;
+var ACCIONES 			= "default";
+var I_WANT_PAUSE 		= false;
+var IS_VALID 			= false;
+var peticion 			= false;
+var isWaitingforServer  = false; 
 
 var file = webRoot+"data/training/teams/featured/featured-july.json?v=1";
 var featuredTeams = [];

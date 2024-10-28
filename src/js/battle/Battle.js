@@ -941,64 +941,155 @@ function Battle(){
 
 		}, 1000);
 
-		mainLoopInterval = setInterval(function(){
+		mainLoopInterval = setInterval(async function(){
 
+			
 			if(IS_GAME_PAUSED ){
+
+				if(isWaitingforServer && peticion){
+					return;
+				}
 				self.setPause(IS_GAME_PAUSED);
 				if(pokemon[0].cooldown > 500){
 					ACCIONES = "wait";
+					console.log("wait");
+
+				}
+
+
+				else if (peticion){
+
+					
+					
+						isWaitingforServer = true;
+						//Pedir al servidor la accion
+						let url = "http://localhost:8000/getAction";
+						let response = await $.ajax({
+							url: url,
+							type: 'POST',
+							dataType: 'json',
+							contentType: 'application/json',
+							//data que llega al servidor
+							data: JSON.stringify({
+								//pokemon: {
+								//	name: pokemon[0].speciesId,
+								//	hp: pokemon[0].hp,
+								//	energy: pokemon[0].energy,
+								//},
+								teamAlly: {
+	
+									pokemon1 : {
+										name: players[0].getTeam()[0].speciesName,
+										energy: players[0].getTeam()[0].energy,
+										hp: players[0].getTeam()[0].hp,
+										
+									},
+									pokemon2 : {
+										name: players[0].getTeam()[1].speciesName,
+										energy: players[0].getTeam()[1].energy,
+										hp: players[0].getTeam()[1].hp,
+										
+									},
+									pokemon3 : {
+										name: players[0].getTeam()[2].speciesName,
+										energy: players[0].getTeam()[2].energy,
+										hp: players[0].getTeam()[2].hp,
+										
+									},
+									shield: players[0].getShields()
+								},
+								teamEnemy: {
+									pokemon1 : {
+											name: players[1].getTeam()[0].speciesName,
+											energy: players[1].getTeam()[0].energy,
+											hp: players[1].getTeam()[0].hp,
+											
+										},
+									pokemon2 : {
+										name: players[1].getTeam()[1].speciesName,
+										energy: players[1].getTeam()[1].energy,
+										hp: players[1].getTeam()[1].hp,
+										
+									},
+									pokemon3 : {
+										name: players[1].getTeam()[2].speciesName,
+										energy: players[1].getTeam()[2].energy,
+										hp: players[1].getTeam()[2].hp,
+										
+									},
+									shield: players[1].getShields()
+								},
+								reques: ACCIONES,
+								
+							}),
+							// Recibe la informacion del servidor
+							success: function(res){
+								console.log(res);
+								if(res.success){
+									isWaitingforServer = false;
+									ACCIONES = res.action ? res.action : "false";
+								}
+											},
+							error: function(error){
+									isWaitingforServer = false;
+								console.log(error);
+							}
+						});
+					
+
 				}
 				switch(ACCIONES){
 					case "fast":
-						self.queueAction(0, "fast", 0);
 						IS_GAME_PAUSED=false;
 						self.setPause(IS_GAME_PAUSED);
 						ACCIONES = "";
+						self.queueAction(0, "fast", 0);
 						break;
 
 					case "charged1":
-						self.queueAction(0, "charged", 0);
 						IS_GAME_PAUSED=false;
 						self.setPause(IS_GAME_PAUSED);
 						ACCIONES = "";
+						self.queueAction(0, "charged", 0);
 						break;
 					case "charged2":
-						self.queueAction(0, "charged", 1);
 						IS_GAME_PAUSED=false;
 						self.setPause(IS_GAME_PAUSED);
 						ACCIONES = "";
+						self.queueAction(0, "charged", 1);
 						break;
 					case "switch1":
-						self.queueAction(0, "switch", 0);
-						console.log("switch1");
+						
 						IS_GAME_PAUSED=false;
 						self.setPause(IS_GAME_PAUSED);
 						ACCIONES = "";
+						self.queueAction(0, "switch", 1);
+
 						break;
 					case "switch2":
-						self.queueAction(0, "switch", 1);
 						IS_GAME_PAUSED=false;
 						self.setPause(IS_GAME_PAUSED);
 						ACCIONES = "";
+						self.queueAction(0, "switch", 2);
 						break;
 					
 					case "wait":
-						self.queueAction(0, "wait", 0);
 						IS_GAME_PAUSED=false;
 						self.setPause(IS_GAME_PAUSED);
 						ACCIONES = "";
+						self.queueAction(0, "wait", 0);
 						break;
 					case "shield":
-						self.setPlayerUseShield(true);
 						IS_GAME_PAUSED=false;
 						self.setPause(IS_GAME_PAUSED);
 						ACCIONES = "";
+						self.setPlayerUseShield(true);
 						break;
 					case "no_shield":
-						self.setPlayerUseShield(false);
 						IS_GAME_PAUSED=false;
 						self.setPause(IS_GAME_PAUSED);
 						ACCIONES = "";
+						self.setPlayerUseShield(false);
 						break;
 					
 					default:
@@ -1014,9 +1105,9 @@ function Battle(){
 			self.step();
 			
 			self.dispatchUpdate();
-			console.log("cooldowns: after "+pokemon[0].cooldown+" "+pokemon[1].cooldown);
-			console.log("pokemon stats: "+pokemon[0].hp+" "+pokemon[1].hp);
-			console.log("pokemon energy: "+pokemon[0].energy+" "+pokemon[1].energy);
+			// console.log("cooldowns: after "+pokemon[0].cooldown+" "+pokemon[1].cooldown);
+			// console.log("pokemon stats: "+pokemon[0].hp+" "+pokemon[1].hp);
+			// console.log("pokemon energy: "+pokemon[0].energy+" "+pokemon[1].energy);
 
 			if(I_WANT_PAUSE){
 				IS_GAME_PAUSED=true;

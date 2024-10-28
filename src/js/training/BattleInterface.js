@@ -103,6 +103,9 @@ var BattlerMaster = (function () {
 					$("#switch2").on("click", function(){
 						ACCIONES = "switch2";
 					})
+					$("#Peticion").on("click", function(){
+						peticion = !peticion;
+					})
 					listenersInitialized = true;
 				}
 
@@ -1206,6 +1209,8 @@ var BattlerMaster = (function () {
 
 			function replayBattleClick(e){
 				// Stop the current battle
+				IS_GAME_PAUSED = false;
+				peticion = false;
 				battle.stop();
 
 				// Manually set the previous team
@@ -1213,6 +1218,8 @@ var BattlerMaster = (function () {
 					properties.teamSelectMethod = "manual";
 					properties.teams[1] = players[1].getTeam();
 					handler.initBattle(properties);
+					//IS_GAME_PAUSED = true;
+					peticion = true;
 				} else if(properties.mode == "tournament"){
 					handler.startTournamentBattle(players[0].getTeam(), properties, players[1].getTeam());
 				}

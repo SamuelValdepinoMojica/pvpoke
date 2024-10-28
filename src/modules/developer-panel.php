@@ -20,7 +20,7 @@
 		<a class="button " id="AtaqueCargado2" href="#">Ataque Cargado 2</a>
 		<a class="button " id="switch1" href="#">Cambio Pokemon 1</a>
 		<a class="button " id="switch2" href="#">Cambio Pokemon 2</a>
-		
+		<a class="button " id="Peticion" href="#">Quiero Recibir Peticion</a>
 		
 		<h4>Quick Links</h4>
 		<a class="button" href="<?php echo $WEB_ROOT; ?>data/overrideEditor.php">Override Editor</a>
