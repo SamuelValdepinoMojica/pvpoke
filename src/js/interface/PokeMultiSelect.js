@@ -26,14 +26,18 @@ function PokeMultiSelect(element){
 
 	var filterMode = "meta";
 
-	var settings = {
-		shields: 1,
-		ivs: "original",
-		bait: 1,
-		levelCap: 50
-	}
+	var multiSettings = getDefaultMultiBattleSettings();
 
 	var cliffhangerMode = false;
+
+	var showMoveCounts = false;
+
+	// Show move counts if previously set
+	if(window.localStorage.getItem("rankingsShowMoveCounts") == "true"){
+		$el.find(".check.show-move-counts").addClass("on");
+		$el.find(".rankings-container").toggleClass("show-move-counts");
+		showMoveCounts = true;
+	}
 
 	this.init = function(pokes, b){
 		pokemon = pokes;
@@ -104,7 +108,7 @@ function PokeMultiSelect(element){
 
 		selectedIndex = index;
 
-		modalWindow("Select Pokemon", $el.find(".poke.single").first());
+		modalWindow("Select Pokemon", $(".hide .poke.single").first());
 
 		pokeSelector = new PokeSelect($(".modal .poke"), 1);
 		pokeSelector.setContext("modal"+context);
@@ -120,6 +124,10 @@ function PokeMultiSelect(element){
 
 			if(interface.battleMode && interface.battleMode == "matrix"){
 				$(".modal-content").append("<div class=\"center\"><a href=\"#\" class=\"compare-poke\">Add & Compare</a></div>");
+			}
+
+			if(parseInt(settings.pokeboxId) > 0){
+				$(".modal-content").append("<div class=\"center\"><a href=\"#\" class=\"compare-pokebox\">Add & Compare<br>from Pokebox</a></div>");
 			}
 
 			if(focusName){
@@ -295,6 +303,29 @@ function PokeMultiSelect(element){
 
 		});
 
+		// Add Pokemon and all matching Pokemon from Pokebox
+
+		$(".modal .compare-pokebox").on("click", function(e){
+			e.preventDefault();
+
+			// Make sure something's selected
+			if(! pokeSelector){
+				return false;
+			}
+
+			var pokemon = pokeSelector.getPokemon();
+
+			if(! pokemon){
+				return false;
+			}
+
+			pokemonList.push(pokemon);
+
+			// Add multiple IV spreads of the same Pokemon
+			pokebox.loadPokebox(false, self.addPokemonFromPokebox, pokemon.speciesId);
+
+		});
+
 
 		// Keyboard shortcuts for entering a Pokemon
 
@@ -307,6 +338,18 @@ function PokeMultiSelect(element){
 				$el.find(".add-poke-btn").focus();
 			}
 		});
+	}
+
+	this.addPokemonFromPokebox = function(box){
+		pokemonList = pokemonList.concat(box);
+
+		closeModalWindow();
+
+		showIVs = true;
+
+		$el.find(".check.show-ivs").addClass("on");
+
+		self.updateListDisplay();
 	}
 
 
@@ -342,7 +385,27 @@ function PokeMultiSelect(element){
 					$item.find(".moves").append(", ");
 				}
 
-				$item.find(".moves").append(moveList[n].displayName);
+				var moveNameStr = moveList[n].displayName;
+
+				if(moveList[n].energyGain > 0){
+					moveNameStr += "<span class=\"count fast\">"+(moveList[n].cooldown / 500)+"</span>";
+				} else{
+					var moveCounts = Pokemon.calculateMoveCounts(pokemon.fastMove, moveList[n]);
+					var moveCount = moveCounts[0];
+
+					if(moveCounts[0] > moveCounts[1]){
+						moveCount+="-";
+					}
+
+					if(moveCounts[2] < moveCounts[1] && moveCounts[1] == moveCounts[0]){
+						moveCount+=".";
+					}
+
+					moveNameStr += "<span class=\"count\">"+moveCount+"</span>";
+				}
+
+
+				$item.find(".moves").append(moveNameStr);
 			}
 
 
@@ -426,8 +489,10 @@ function PokeMultiSelect(element){
 		// Show or hide sort button
 		if(pokemonList.length > 0){
 			$el.find("a.custom-group-sort").css("visibility", "visible");
+			$el.find(".check.show-move-counts").css("visibility", "visible");
 		} else{
 			$el.find("a.custom-group-sort").css("visibility", "hidden");
+			$el.find(".check.show-move-counts").css("visibility", "hidden");
 		}
 
 		if(pokemonList.length >= maxPokemonCount){
@@ -579,8 +644,8 @@ function PokeMultiSelect(element){
 				element.show();
 				return;
 			}
-			var optionCP = leagueMap[element.attr("type")]
-			if (optionCP === cp) {
+			var optionCP = leagueMap[element.attr("type")];
+			if (optionCP == cp) {
 				element.show();
 			} else {
 				element.hide();
@@ -596,7 +661,7 @@ function PokeMultiSelect(element){
 		// Set all Pokemon to the new CP limit
 		for(var i = 0; i < pokemonList.length; i++){
 			pokemonList[i].setBattle(battle);
-			pokemonList[i].initialize(cp, settings.defaultIVs);
+			pokemonList[i].initialize(cp, multiSettings.defaultIVs);
 		}
 
 		if(pokemonList.length > 0){
@@ -613,14 +678,14 @@ function PokeMultiSelect(element){
 		for(var i = 0; i < pokemonList.length; i++){
 			pokemonList[i].setLevelCap(levelCap);
 			pokemonList[i].setBattle(battle);
-			pokemonList[i].initialize(battle.getCP(), settings.defaultIVs);
+			pokemonList[i].initialize(battle.getCP(), multiSettings.defaultIVs);
 		}
 
 		if(pokemonList.length > 0){
 			self.updateListDisplay();
 		}
 
-		settings.levelCap = levelCap;
+		multiSettings.levelCap = levelCap;
 	}
 
 	// Convert the current Pokemon list into exportable and savable JSON
@@ -1020,21 +1085,21 @@ function PokeMultiSelect(element){
 	$el.find(".shield-picker .option").on("click", function(e){
 		var value = parseInt($(e.target).closest(".option").attr("value"));
 
-		settings.shields = value;
+		multiSettings.shields = value;
 	});
 
 	// Change IV settings
 
 	$el.find(".default-iv-select").on("change", function(e){
-		settings.ivs = $el.find(".default-iv-select option:selected").val();
+		multiSettings.ivs = $el.find(".default-iv-select option:selected").val();
 
 		// Adjust IVs as needed
-		switch(settings.ivs){
+		switch(multiSettings.ivs){
 			case "overall":
 			case "atk":
 			case "def":
 			for(var i = 0; i < pokemonList.length; i++){
-				pokemonList[i].maximizeStat(settings.ivs);
+				pokemonList[i].maximizeStat(multiSettings.ivs);
 			}
 			break;
 
@@ -1057,7 +1122,14 @@ function PokeMultiSelect(element){
 			break;
 		}
 
+		modalWindow("IV's Applied", $("<p>The Pokemon in this group have been updated to <b>"+$el.find(".default-iv-select option:selected").html()+"</b>.</p>"));
+
 		$el.find(".default-iv-select option").eq(0).prop("selected", "selected");
+
+		if(battle.getCup().name != "custom"){
+			$el.find(".cup-select").find("option[value=\"custom\"]").prop("selected", "selected");
+			$el.find(".cup-select").trigger("change");
+		}
 
 		if(! showIVs){
 			showIVs = true;
@@ -1070,13 +1142,13 @@ function PokeMultiSelect(element){
 	// Change bait toggle
 
 	$el.find(".bait-picker .option").on("click", function(e){
-		settings.bait = parseInt($(e.target).attr("value"));
+		multiSettings.bait = parseInt($(e.target).attr("value"));
 	});
 
 	// Change level cap
 
 	$el.find(".pokemon-level-cap-select").on("change", function(e){
-		settings.levelCap = parseInt($el.find(".pokemon-level-cap-select option:selected").val());
+		multiSettings.levelCap = parseInt($el.find(".pokemon-level-cap-select option:selected").val());
 	});
 
 	// Show or hide IV's
@@ -1153,7 +1225,31 @@ function PokeMultiSelect(element){
 	// Return the current option setings
 
 	this.getSettings = function(){
-		return settings;
+		return multiSettings;
+	}
+
+	// Set settings provided a setting object
+
+	this.setSettingsFromGet = function(obj){
+		// Map values to settings object
+
+		$el.find("input.start-hp").val(obj.startHp * 100);
+		$el.find("input.start-hp").trigger("change");
+
+		$el.find("input.start-energy").val(obj.startEnergy);
+		$el.find("input.start-energy").trigger("change");
+
+		$el.find("input.stat-mod").eq(0).val(obj.startStatBuffs[0]);
+		$el.find("input.stat-mod").eq(1).val(obj.startStatBuffs[1]);
+		$el.find("input.stat-mod").trigger("change");
+
+		if(obj.startCooldown == 1000){
+			$el.find(".check.switch-delay").trigger("click");
+		}
+
+		if(obj.optimizeMoveTiming == 0){
+			$el.find(".check.optimize-timing").trigger("click");
+		}
 	}
 
 	// Set the context for this multiselector
@@ -1373,6 +1469,127 @@ function PokeMultiSelect(element){
 		return searchString
 	}
 
+	// Toggle move count info
+
+	$el.find(".check.show-move-counts").click(function(e){
+		showMoveCounts = (! showMoveCounts);
+
+		$el.find(".rankings-container").toggleClass("show-move-counts");
+
+		window.localStorage.setItem("rankingsShowMoveCounts", showMoveCounts)
+	});
+
+	// Enter starting HP
+
+	$el.find(".start-hp").on("keyup change", function(e){
+
+		multiSettings.startHp = parseFloat($el.find(".start-hp").val()) / 100;
+
+		if(multiSettings.startHp < 0){
+			multiSettings.startHp = 0;
+		} else if (multiSettings.startHp > 1){
+			multiSettings.startHp = 1;
+		}
+
+		if($el.find(".start-hp").val() == ''){
+			multiSettings.startHp = 1;
+		}
+	});
+
+	// Enter starting energy
+
+	$el.find(".start-energy").on("keyup change", function(e){
+
+		var value = parseInt($el.find(".start-energy").val());
+		multiSettings.startEnergy = parseInt($el.find(".start-energy").val());
+
+		if(multiSettings.startEnergy < 0){
+			multiSettings.startEnergy = 0;
+		} else if (multiSettings.startEnergy > 100){
+			multiSettings.startEnergy = 100;
+		}
+
+		if($el.find(".start-energy").val() == ''){
+			multiSettings.startEnergy = 0;
+		}
+	});
+
+	// Turn switch delay on or off
+
+	$el.find(".check.switch-delay").on("click", function(e){
+		// Cooldown decreases at the start of the battle step, so a start value of 1000 will result in a 500 ms delay
+		multiSettings.startCooldown = multiSettings.startCooldown == 0 ? multiSettings.startCooldown = 1000 : multiSettings.startCooldown = 0;
+		console.log(multiSettings.startCooldown);
+	});
+
+	// Turn move optimization on or off
+
+	$el.find(".check.optimize-timing").on("click", function(e){
+		multiSettings.optimizeMoveTiming = (! multiSettings.optimizeMoveTiming);
+	});
+
+	// Change stat modifier options
+	$el.find("input.stat-mod").on("keyup change", function(e){
+
+		var value = parseInt($(this).val());
+
+		if(! value){
+			value = 0;
+		}
+
+		if((value >= -4) && (value <=4) && (value % 1 == 0)){
+			// Valid level
+
+			var attackValue = parseInt($el.find("input.stat-mod[iv='atk']").val());
+			var defenseValue = parseInt($el.find("input.stat-mod[iv='def']").val());
+
+			if(! attackValue)
+				attackValue = 0;
+
+			if(! defenseValue)
+				defenseValue = 0;
+
+			multiSettings.startStatBuffs = [attackValue, defenseValue];
+		}
+
+		var buffDivisor = gm.data.settings.buffDivisor;
+		var adjustmentAtk = 1;
+		var adjustmentDef = 1;
+
+		if(attackValue > 0){
+			adjustmentAtk = (buffDivisor + attackValue) / buffDivisor;
+		} else{
+			adjustmentAtk = buffDivisor / (buffDivisor - attackValue);
+		}
+
+		adjustmentAtk = Math.round(adjustmentAtk * 100) / 100;
+
+		if(defenseValue > 0){
+			adjustmentDef = (buffDivisor + defenseValue) / buffDivisor;
+		} else{
+			adjustmentDef = buffDivisor / (buffDivisor - defenseValue);
+		}
+
+		adjustmentDef = Math.round((1 / adjustmentDef) * 100) / 100;
+
+		$el.find(".adjustment.attack .value").html("x" + adjustmentAtk);
+		$el.find(".adjustment.defense .value").html("x" + adjustmentDef);
+
+		$el.find(".adjustment .value").removeClass("buff debuff");
+
+		if(adjustmentAtk > 1){
+			$el.find(".adjustment.attack .value").addClass("buff");
+		} else if(adjustmentAtk < 1){
+			$el.find(".adjustment.attack .value").addClass("debuff");
+		}
+
+		if(adjustmentDef > 1){
+			$el.find(".adjustment.defense .value").addClass("debuff");
+		} else if(adjustmentDef < 1){
+			$el.find(".adjustment.defense .value").addClass("buff");
+		}
+	});
+
 	// Returns a region based on dex number
 
 	this.getRegion = function(dexNumber){
@@ -1397,4 +1614,19 @@ function PokeMultiSelect(element){
 		}
 		return
 	}
+}
+
+
+function getDefaultMultiBattleSettings() {
+		return {
+		shields: 1,
+		ivs: "original",
+		bait: 1,
+		levelCap: 50,
+		startHp: 1,
+		startEnergy: 0,
+		startCooldown: 0,
+		optimizeMoveTiming: true,
+		startStatBuffs: [ 0, 0 ]
+	};
 }

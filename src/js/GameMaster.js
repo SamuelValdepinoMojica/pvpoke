@@ -199,25 +199,30 @@ var GameMaster = (function () {
 		object.updateShadowStatus = function(){
 
 			// First, clear all Shadow entries from the game master to start from a clean slate
-			for(var i = 0; i < object.data.pokemon.length; i++){
+			/*for(var i = 0; i < object.data.pokemon.length; i++){
 				var poke = object.data.pokemon[i];
 				if((poke)&&(poke.speciesId.indexOf("_shadow") > -1)){
 					console.log("Removed " + poke.speciesId);
 					object.data.pokemon.splice(i, 1);
 					i--;
 				}
-			}
+			}*/
 
 			var battle = new Battle();
 
 			$.each(object.data.pokemon, function(index, poke){
+				console.log(poke.speciesId);
 				if(poke.speciesId.indexOf("_shadow") > -1){
-					return false;
+					return;
 				}
 
 				var pokemon = new Pokemon(poke.speciesId, 0, battle);
 				var entry = object.getPokemonById(poke.speciesId);
 				battle.setNewPokemon(pokemon, 0, false);
+
+				if(pokemon.hasTag("shadoweligible")){
+					return;
+				}
 
 				// Remove Return and Frustration from legacy move list
 				if(entry.legacyMoves){
@@ -276,7 +281,8 @@ var GameMaster = (function () {
 
 						entry.speciesId += "_shadow";
 						entry.speciesName += " (Shadow)";
-						entry.tags.splice(entry.tags.indexOf("shadowEligible"), 1);
+						entry.tags.splice(entry.tags.indexOf("shadoweligible"), 1);
+						entry.tags.splice(entry.tags.indexOf("wildlegendary"), 1);
 						entry.tags.push("shadow");
 
 						// Adjust IDs for evolutions
@@ -716,6 +722,10 @@ var GameMaster = (function () {
 						}
 					}
 
+					if(m.formChange){
+						move.formChange = JSON.parse(JSON.stringify(m.formChange));
+					}
+
 					return;
 				}
 			});
@@ -731,22 +741,32 @@ var GameMaster = (function () {
 		// Get status effect string from a move
 
 		object.getStatusEffectString = function(move){
-			if (!move.buffs) {
+			if (!move.buffs && !move.formChange) {
 				return '';
 			}
-			var atk = object.getStatusEffectStatString(move.buffs[0], 'Atk');
-			var def = object.getStatusEffectStatString(move.buffs[1], 'Def');
-			var buffApplyChance = parseFloat(move.buffApplyChance)*100 + '%';
-			var buffTarget = move.buffTarget;
-			var stringArray = [buffApplyChance + " chance", atk, def, buffTarget];
 
-			if(move.buffTarget == "both"){
-				stringArray[3] = "self";
+			var stringArray = []
 
-				var atkOpp = object.getStatusEffectStatString(move.buffsOpponent[0], 'Atk');
-				var defOpp = object.getStatusEffectStatString(move.buffsOpponent[1], 'Def');
+			if(move.buffs){
+				var atk = object.getStatusEffectStatString(move.buffs[0], 'Atk');
+				var def = object.getStatusEffectStatString(move.buffs[1], 'Def');
 				var buffApplyChance = parseFloat(move.buffApplyChance)*100 + '%';
-				stringArray.push(buffApplyChance + " chance", atkOpp, defOpp, "opponent");
+				var buffTarget = move.buffTarget;
+				stringArray.push(buffApplyChance + " chance", atk, def, buffTarget);
+
+				if(move.buffTarget == "both"){
+					stringArray[3] = "self";
+
+					var atkOpp = object.getStatusEffectStatString(move.buffsOpponent[0], 'Atk');
+					var defOpp = object.getStatusEffectStatString(move.buffsOpponent[1], 'Def');
+					var buffApplyChance = parseFloat(move.buffApplyChance)*100 + '%';
+					stringArray.push(buffApplyChance + " chance", atkOpp, defOpp, "opponent");
+				}
+
+			}
+
+			if(move.formChange){
+				stringArray.push("Form change");
 			}
 
 			return "<div class=\"status-effect-description\">"+stringArray.join(' ')+"</div>";
@@ -939,7 +959,7 @@ var GameMaster = (function () {
 				minStats = 0;
 			}
 
-			var bannedList = ["mewtwo","mewtwo_armored","giratina_altered","groudon","kyogre","palkia","dialga","cobalion","terrakion","virizion","thundurus_incarnate","regigigas","tornadus_incarnate","tornadus_therian","tornadus_therian_xl","landorus_incarnate", "landorus_therian", "reshiram", "zekrom", "kyurem", "genesect_burn", "xerneas", "thundurus_therian", "yveltal", "meloetta_aria", "zacian", "zamazenta", "zacian_hero", "zamazenta_hero", "genesect_douse", "zarude", "hoopa_unbound", "genesect_shock", "tapu_koko", "tapu_lele", "tapu_bulu", "nihilego", "genesect_chill", "braviary_hisuian", "solgaleo", "lunala", "keldeo_ordinary", "kyogre_primal", "groudon_primal", "zygarde_complete", "enamorus_therian", "enamorus_incarnate", "dialga_origin", "palkia_origin", "necrozma", "necrozma_dawn_wings", "necrozma_dusk_mane", "marshadow"];
+			var bannedList = ["mewtwo","mewtwo_armored","giratina_altered","groudon","kyogre","palkia","dialga","cobalion","terrakion","virizion","thundurus_incarnate","regigigas","tornadus_incarnate","tornadus_therian","tornadus_therian_xl","landorus_incarnate", "landorus_therian", "reshiram", "zekrom", "kyurem", "genesect_burn", "xerneas", "thundurus_therian", "yveltal", "meloetta_aria", "zacian", "zamazenta", "zacian_hero", "zamazenta_hero", "genesect_douse", "zarude", "hoopa_unbound", "genesect_shock", "tapu_koko", "tapu_lele", "tapu_bulu", "nihilego", "genesect_chill", "solgaleo", "lunala", "keldeo_ordinary", "kyogre_primal", "groudon_primal", "zygarde_complete", "enamorus_therian", "enamorus_incarnate", "dialga_origin", "palkia_origin", "necrozma", "necrozma_dawn_wings", "necrozma_dusk_mane", "marshadow"];
 
 			// Aggregate filters
 
@@ -957,8 +977,8 @@ var GameMaster = (function () {
 
 				var stats = (pokemon.stats.hp * pokemon.stats.atk * pokemon.stats.def) / 1000;
 
-				if((stats >= minStats) ||
-				 ( (battle.getCP() == 1500) &&
+				if(stats >= minStats || battle.getCup().includeLowStatProduct ||
+				 ( battle.getCP() == 1500 &&
 				 (pokemon.hasTag("include1500") || pokemon.hasTag("mega") ))){
 					// Today is the day
 					if(! pokemon.released){
@@ -969,7 +989,12 @@ var GameMaster = (function () {
 						continue;
 					}
 
-					if(pokemon.hasTag("duplicate1500") && (battle.getCP() != 1500 || battle.getCup().name != "all")){
+					if(pokemon.hasTag("duplicate1500") && (battle.getCP() != 1500 || (battle.getCup().name != "all" && battle.getCup().name != "sunshine" && battle.getCup().name != "halloween"))){
+						continue;
+					}
+
+					// Ban Shadows from Little Cup that can't reach a low enough level
+					if(battle.getCP() == 500 && pokemon.hasTag("shadow") && pokemon.level < 8){
 						continue;
 					}
 

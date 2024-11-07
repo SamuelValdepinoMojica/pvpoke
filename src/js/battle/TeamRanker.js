@@ -27,15 +27,7 @@ var RankerMaster = (function () {
 			var shieldMode = 'single'; // single - sim specific shield scenarios, average - sim average of 0 and 1 shields each
 			var chargedMoveCountOverride = 2;
 			var shieldBaitOverrides = [true, true];
-			var overrideSettings = [{
-				shields: 1,
-				ivs: "original",
-				bait: 1
-			}, {
-				shields: 1,
-				ivs: "original",
-				bait: 1
-			}];
+			var overrideSettings = [getDefaultMultiBattleSettings(), getDefaultMultiBattleSettings()];
 
 			var useRecommendedMoves = true;
 
@@ -140,7 +132,7 @@ var RankerMaster = (function () {
 						moveset.chargedMoves.push(pokemon.chargedMoves[n]);
 					}
 
-					if((overrideSettings[1].ivs != "gamemaster")&&(overrideSettings[1].ivs != "original")){
+					/*if((overrideSettings[1].ivs != "gamemaster")&&(overrideSettings[1].ivs != "original")){
 						pokemon.levelCap = overrideSettings[1].levelCap;
 						pokemon.maximizeStat(overrideSettings[1].ivs);
 					} else if((overrideSettings[1].ivs == "gamemaster")&&(pokemon.isCustom)){
@@ -149,7 +141,7 @@ var RankerMaster = (function () {
 						if(pokemon.baitShields != 1){
 							pokemon.isCustom = true;
 						}
-					}
+					}*/
 
 					rankObj.moveset = moveset;
 
@@ -178,10 +170,10 @@ var RankerMaster = (function () {
 							opponent.selectRecommendedMoveset();
 						}
 
-						pokemon.baitShields = overrideSettings[1].bait;
+						self.applySettingsToPokemon(overrideSettings[1], pokemon);
 
 						if(context == "matrix" || context == "team-counters"){
-							opponent.baitShields = overrideSettings[0].bait;
+							self.applySettingsToPokemon(overrideSettings[0], opponent);
 						}
 
 						if(overrideSettings[1].bait != 1){
@@ -297,9 +289,12 @@ var RankerMaster = (function () {
 
 						// Calculate breakpoint and bulkpoint
 						if(context == "matrix"){
-							var breakpoint = battle.calculateDamageByStats(pokemon, opponent, pokemon.stats.atk * pokemon.shadowAtkMult, opponent.stats.def * opponent.shadowDefMult, opponent.typeEffectiveness[pokemon.fastMove.type], pokemon.fastMove);
+							pokemon.reset();
+							opponent.reset();
 
-							var bulkpoint = battle.calculateDamageByStats(opponent, pokemon, opponent.stats.atk * opponent.shadowAtkMult, pokemon.stats.def * pokemon.shadowDefMult, pokemon.typeEffectiveness[opponent.fastMove.type], opponent.fastMove);
+							var breakpoint = battle.calculateDamageByStats(pokemon, opponent, pokemon.getEffectiveStat(0), opponent.getEffectiveStat(1), opponent.typeEffectiveness[pokemon.fastMove.type], pokemon.fastMove);
+
+							var bulkpoint = battle.calculateDamageByStats(opponent, pokemon, opponent.getEffectiveStat(0), pokemon.getEffectiveStat(1), pokemon.typeEffectiveness[opponent.fastMove.type], opponent.fastMove);
 
 							matchup.breakpoint = breakpoint; // Fast move breakpoint
 							matchup.bulkpoint = bulkpoint; // Fast move bulkpoint
@@ -309,28 +304,31 @@ var RankerMaster = (function () {
 							matchup.bulkpointCM2 = 0;
 
 							if(pokemon.chargedMoves.length > 0){
-								var breakpointCM1 = battle.calculateDamageByStats(pokemon, opponent, pokemon.stats.atk * pokemon.shadowAtkMult, opponent.stats.def * opponent.shadowDefMult, opponent.typeEffectiveness[pokemon.chargedMoves[0].type], pokemon.chargedMoves[0]);
+								var breakpointCM1 = battle.calculateDamageByStats(pokemon, opponent, pokemon.getEffectiveStat(0), opponent.getEffectiveStat(1), opponent.typeEffectiveness[pokemon.chargedMoves[0].type], pokemon.chargedMoves[0]);
 								matchup.breakpointCM1 = breakpointCM1;
 							}
 
 							if(pokemon.chargedMoves.length > 1){
-								var breakpointCM2 = battle.calculateDamageByStats(pokemon, opponent, pokemon.stats.atk * pokemon.shadowAtkMult, opponent.stats.def * opponent.shadowDefMult, opponent.typeEffectiveness[pokemon.chargedMoves[1].type], pokemon.chargedMoves[1]);
+								var breakpointCM2 = battle.calculateDamageByStats(pokemon, opponent, pokemon.getEffectiveStat(0), opponent.getEffectiveStat(1), opponent.typeEffectiveness[pokemon.chargedMoves[1].type], pokemon.chargedMoves[1]);
 								matchup.breakpointCM2 = breakpointCM2;
 							}
 
 							if(opponent.chargedMoves.length > 0){
-								var bulkpointCM1 = battle.calculateDamageByStats(opponent, pokemon, opponent.stats.atk * opponent.shadowAtkMult, pokemon.stats.def * pokemon.shadowDefMult, pokemon.typeEffectiveness[opponent.chargedMoves[0].type], opponent.chargedMoves[0]);
+								var bulkpointCM1 = battle.calculateDamageByStats(opponent, pokemon, opponent.getEffectiveStat(0), pokemon.getEffectiveStat(1), pokemon.typeEffectiveness[opponent.chargedMoves[0].type], opponent.chargedMoves[0]);
 								matchup.bulkpointCM1 = bulkpointCM1;
 							}
 
 							if(opponent.chargedMoves.length > 1){
-								var bulkpointCM2 = battle.calculateDamageByStats(opponent, pokemon, opponent.stats.atk * opponent.shadowAtkMult, pokemon.stats.def * pokemon.shadowDefMult, pokemon.typeEffectiveness[opponent.chargedMoves[1].type], opponent.chargedMoves[1]);
+								var bulkpointCM2 = battle.calculateDamageByStats(opponent, pokemon, opponent.getEffectiveStat(0), pokemon.getEffectiveStat(1), pokemon.typeEffectiveness[opponent.chargedMoves[1].type], opponent.chargedMoves[1]);
 								matchup.bulkpointCM2 = bulkpointCM2;
 							}
 
 
 							matchup.atkDifferential = pokemon.stats.atk - opponent.stats.atk;
 						}
+
+						pokemon.reset();
+						opponent.reset();
 
 						rankObj.matchups.push(matchup);
 					}
@@ -390,6 +388,24 @@ var RankerMaster = (function () {
 
 			this.applySettings = function(settings, index){
 				overrideSettings[index] = settings;
+			}
+
+			this.applySettingsToPokemon = function(settings, pokemon){
+				var defaultSettings = getDefaultMultiBattleSettings();
+
+				var fastMoveCount = Math.floor((settings.startEnergy * 500) / pokemon.fastMove.cooldown);
+
+				pokemon.baitShields = settings.bait;
+				pokemon.startHp = Math.floor(settings.startHp * pokemon.stats.hp);
+				pokemon.startEnergy = Math.min(pokemon.fastMove.energyGain * fastMoveCount, 100);
+				pokemon.startCooldown = settings.startCooldown;
+				pokemon.optimizeMoveTiming = settings.optimizeMoveTiming;
+				pokemon.startStatBuffs = settings.startStatBuffs;
+
+				if(settings.bait != defaultSettings.bait || settings.startCooldown != defaultSettings.startCooldown ||
+					settings.optimizeMoveTiming != defaultSettings.optimizeMoveTiming || settings.startStatBuffs != defaultSettings.startStatBuffs){
+					pokemon.isCustom = true;
+				}
 			}
 
 			// Set whether to use recommended movesets for threats

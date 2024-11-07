@@ -63,32 +63,32 @@ switch($cup){
 		$league = 'Fossil Cup';
 		break;
 
-	case "summer":
-		$league = 'Summer Cup';
+	case "sunshine":
+		$league = 'Sunshine Cup';
 		break;
 
-	case "zodiac":
-		$league = 'Devon Zodiac Cup';
+	case "chaos":
+		$league = 'Devon Chaos Cup';
 		break;
 
-	case "sovereign":
-		$league = 'Devon Sovereign Cup';
+	case "crypt":
+		$league = 'Devon Crypt Cup';
 		break;
 
 	case "devonchampionship":
 		$league = 'devonchampionship';
 		break;
 
-	case "tundra":
-		$league = 'Devon Tundra Cup';
-		break;
-
-	case "ufc-untapped-master":
-		$league = 'UFC Untapped (Master)';
+	case "tundraremixv2":
+		$league = 'Devon Tundra Cup (Gymbreakers Remix V2)';
 		break;
 
 	case "catch":
 		$league = 'Catch Cup';
+		break;
+
+	case "willpower":
+		$league = 'Willpower Cup';
 		break;
 
 	case "little":
@@ -123,12 +123,28 @@ switch($cup){
 		$league = 'Little Catch Cup';
 		break;
 
-	case "evolution":
-		$league = 'Evolution Cup';
+	case "halloween":
+		if($cp == "500"){
+			$league = 'Little Halloween Cup';
+		} else {
+			$league = 'Halloween Cup';
+		}
 		break;
 
 	case "fantasy":
 		$league = 'Fantasy Cup';
+		break;
+
+	case "psychic":
+		$league = 'Psychic Cup';
+		break;
+
+	case "galar":
+		if($cp == "500"){
+			$league = 'Little Galar Cup';
+		} else {
+			$league = 'Galar Cup';
+		}
 		break;
 
 	case "remix":
@@ -322,6 +338,7 @@ require_once 'header.php';
 <script src="<?php echo $WEB_ROOT; ?>js/interface/ModalWindow.js?v=<?php echo $SITE_VERSION; ?>"></script>
 <script src="<?php echo $WEB_ROOT; ?>js/interface/PokeSearch.js?v=<?php echo $SITE_VERSION; ?>"></script>
 <script src="<?php echo $WEB_ROOT; ?>js/interface/PokeSelect.js?v=<?php echo $SITE_VERSION; ?>"></script>
+<script src="<?php echo $WEB_ROOT; ?>js/interface/PokeMultiSelect.js?v=<?php echo $SITE_VERSION; ?>"></script>
 <script src="<?php echo $WEB_ROOT; ?>js/battle/TimelineEvent.js?v=<?php echo $SITE_VERSION; ?>"></script>
 <script src="<?php echo $WEB_ROOT; ?>js/battle/TimelineAction.js?v=<?php echo $SITE_VERSION; ?>"></script>
 <script src="<?php echo $WEB_ROOT; ?>js/battle/Battle.js?v=<?php echo $SITE_VERSION; ?>"></script>
