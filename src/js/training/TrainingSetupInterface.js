@@ -6,9 +6,17 @@ var TIEMPO_EJECUCION 	= 500;
 var IS_GAME_PAUSED 		= false;
 var ACCIONES 			= "default";
 var I_WANT_PAUSE 		= false;
-var IS_VALID 			= false;
+
 var peticion 			= false;
-var isWaitingforServer  = false; 
+var CHARGED_MOVE 		= 0;
+var MAKE_ACTION 		= false;
+var ASK_ACTION			= false;
+
+//Shields
+var SHIELD = false;
+var ACTOR = -1;
+var reset = false;
+var firstTime = false;
 
 var file = webRoot+"data/training/teams/featured/featured-july.json?v=1";
 var featuredTeams = [];
@@ -21,7 +29,7 @@ $.getJSON( file, function( data ){
 	for(var i = 0; i < featuredTeams.length; i++){
 		$(".featured-team-select").append("<option value=\""+featuredTeams[i].slug+"\">"+featuredTeams[i].name+" ("+featuredTeams[i].cupName+")</option>");
 	}
-});
+}); 
 
 var InterfaceMaster = (function () {
     var instance;
@@ -79,7 +87,7 @@ var InterfaceMaster = (function () {
 				});
 				$(".battle-btn-fast").on("click", function(){
 					console.log("TIEMPO_EJECUCION:", TIEMPO_EJECUCION);
-					TIEMPO_EJECUCION = 250;
+					TIEMPO_EJECUCION = 100;
 					console.log("TIEMPO_EJECUCION:", TIEMPO_EJECUCION);
 					startBattle();
 				});

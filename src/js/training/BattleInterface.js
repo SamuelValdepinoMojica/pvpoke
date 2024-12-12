@@ -81,30 +81,39 @@ var BattlerMaster = (function () {
 					$("body").on("click", ".modal .quit-confirm .yes", confirmQuitBattle);
 					$("#AtaqueRapido").on("click", function(){
 						ACCIONES = "fast";
-						
+						MAKE_ACTION = true;
 					})
 					$("#Escudo").on("click", function(){
 						ACCIONES = "shield";
+						MAKE_ACTION = true;
 					})
 					$("#NotEscudo").on("click", function(){
 						ACCIONES = "no_shield";
+						MAKE_ACTION = true;
 					})
 					$("#AtaqueCargado1").on("click", function(){
 						ACCIONES = "charged1";
+						MAKE_ACTION = true;
 					})
 					$("#AtaqueCargado2").on("click", function(){
 						ACCIONES = "charged2";
+						MAKE_ACTION = true;
 					})
 					$("#switch1").on("click", function(){
-
 						ACCIONES = "switch1";
-						console.log("ACCIONES", ACCIONES)
+						MAKE_ACTION = true;
 					})
 					$("#switch2").on("click", function(){
 						ACCIONES = "switch2";
+						MAKE_ACTION = true;
 					})
 					$("#Peticion").on("click", function(){
 						peticion = !peticion;
+					})
+					$("#Reset").on("click", function(){
+						ACCIONES = "reset";
+
+						MAKE_ACTION = true;
 					})
 					listenersInitialized = true;
 				}
@@ -269,6 +278,7 @@ var BattlerMaster = (function () {
 							// If we're transitioning from the Charged Move minigame, submit the damage
 							if(phase == "suspend_charged_attack"){
 								var chargeMultiplier = Math.min(.25 + (.75 * (charge / maxCharge)), 1);
+								console.log("chargeMultiplier", chargeMultiplier)
 								battle.setChargeAmount(chargeMultiplier);
 							}
 							break;
@@ -1225,7 +1235,7 @@ var BattlerMaster = (function () {
 				}
 
 			}
-
+			window.replayBattleClick = replayBattleClick;
 			// Go back to the settings page
 
 			function newMatchClick(e){

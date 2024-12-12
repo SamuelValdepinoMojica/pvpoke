@@ -165,7 +165,7 @@ require_once '../header.php';
 <script src="<?php echo $WEB_ROOT; ?>js/training/TrainingSetupInterface.js?v=<?php echo $SITE_VERSION; ?>"></script>
 <script>
 	$('.toggle-pause').on('click', function(e){
-		console.log('I_WANT_PAUSE', I_WANT_PAUSE);
+
 		I_WANT_PAUSE = ! I_WANT_PAUSE;
 		console.log('I_WANT_PAUSE', I_WANT_PAUSE);
 
