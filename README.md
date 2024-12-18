@@ -13,7 +13,7 @@ Cada jugador cuenta con un equipo de 3 pokemon, no se conoce el equipo del opone
 Los pokemon del oponente pueden ser aleatorios en cada epsisodio o pueden ser fijos.
 Cada jugador tiene un maximo de escudos en todo el episodio
 
-###Propiedades del Pokemon
+### Propiedades del Pokemon
 
 Cada Pokémon tiene 3 propiedades principales:
 1. Puntos de salud (PS): Indica la vida restante del Pokémon. El promedio es 150 PS.
@@ -57,13 +57,13 @@ Las observacion en este ambiente es dicreto y esta comformado por lo siguiente:
 3. Escudos
 El ambiente tiene un espcio de observacion de 20, ya que cada jugador cuenta con 10 caracteristicas obsevables
 
-#Recompensas
+# Recompensas
 
 -Ganar una batalla: +1
 -Empatar:+1
 -Perder la batalla:-1
 
-#Fin del episodio
+# Fin del episodio
 
 Un episodio termina cuando se cumple una de las siguientes condiciones:
 1. Todos los Pokémon del aliado o enemigo alcanzan 0 PS.
