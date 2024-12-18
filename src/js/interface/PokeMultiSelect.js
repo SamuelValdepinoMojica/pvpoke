@@ -101,7 +101,7 @@ function PokeMultiSelect(element){
 
 	this.openPokeSelect = function(index, focusName){
 		focusName = typeof focusName !== 'undefined' ? focusName : true;
-
+		console.log("openPokeSelect");
 		selectedIndex = index;
 
 		modalWindow("Select Pokemon", $el.find(".poke.single").first());

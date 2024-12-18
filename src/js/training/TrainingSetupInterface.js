@@ -2,6 +2,21 @@
 * Interface functionality for move list and explorer
 */
 // Load AI archetypes
+var TIEMPO_EJECUCION 	= 500;
+var IS_GAME_PAUSED 		= false;
+var ACCIONES 			= "default";
+var I_WANT_PAUSE 		= false;
+
+var peticion 			= false;
+var CHARGED_MOVE 		= 0;
+var MAKE_ACTION 		= false;
+var ASK_ACTION			= false;
+
+//Shields
+var SHIELD = false;
+var ACTOR = -1;
+var reset = false;
+var firstTime = false;
 
 var file = webRoot+"data/training/teams/featured/featured-july.json?v=1";
 var featuredTeams = [];
@@ -14,7 +29,7 @@ $.getJSON( file, function( data ){
 	for(var i = 0; i < featuredTeams.length; i++){
 		$(".featured-team-select").append("<option value=\""+featuredTeams[i].slug+"\">"+featuredTeams[i].name+" ("+featuredTeams[i].cupName+")</option>");
 	}
-});
+}); 
 
 var InterfaceMaster = (function () {
     var instance;
@@ -64,7 +79,18 @@ var InterfaceMaster = (function () {
 				$(".mode-select").on("change", selectMode);
 				$(".team-method-select").on("change", selectTeamMethod);
 				$(".featured-team-select").on("change", selectFeaturedTeam);
-				$(".battle-btn").on("click", startBattle);
+				$(".battle-btn").on("click", function(){
+					console.log("TIEMPO_DE_EJECCION:", TIEMPO_EJECUCION);
+					TIEMPO_EJECUCION = 500;
+					console.log("TIEMPO_EJECUCION:", TIEMPO_EJECUCION);
+					startBattle();
+				});
+				$(".battle-btn-fast").on("click", function(){
+					console.log("TIEMPO_EJECUCION:", TIEMPO_EJECUCION);
+					TIEMPO_EJECUCION = 100;
+					console.log("TIEMPO_EJECUCION:", TIEMPO_EJECUCION);
+					startBattle();
+				});
 				$(".lets-go-btn").on("click", startTournamentBattle);
 				$("a.return-to-setup").on("click", returnToSetup);
 				$("body").on("click", ".self .roster .pokemon", selectRosterPokemon);
@@ -281,7 +307,10 @@ var InterfaceMaster = (function () {
 			function selectMode(e){
 				partySize = 3;
 				mode = $(".mode-select option:selected").val();
-
+				if (mode == "1v1"){
+					partySize = 1;
+					mode = "single"
+				}
  				if(mode == "tournament"){
 					partySize = 6;
 				}
@@ -525,6 +554,7 @@ var InterfaceMaster = (function () {
 					$(".mode-select option[value=\"single\"]").prop("selected","selected");
 					$(".mode-select option[value=\"tournament\"]").prop("disabled","disabled");
 					$(".mode-select").trigger("change");
+					
 				} else{
 					$(".mode-select option[value=\"tournament\"]").prop("disabled","");
 				}
