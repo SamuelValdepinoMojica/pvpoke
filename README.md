@@ -1,4 +1,12 @@
-# PvPoke
+# PvPoke RL
+[PvPoke.com](https://pvpoke.com)  es un simulador diseñado para simulacion de batallas, creacion de equipos y clasificacion de pokemon. En este proyecto se adapato para ser usado como un ambiente de aprendizaje por refuerzo siguiendo la estructura de [Gym](https://gymnasium.farama.org/api/env/).
+
+#Ambiente
+##Objetivo Principal
+Pokemon go es un juego de estrategia en donde el objetivo principal es derrotar a los Pokémon del enemigo. Esto se logra seleccionando y utilizando de manera estratégica las acciones disponibles para tus Pokémon.
+##Propiedades de cada jugador
+Cada jugador cuenta 
+
 
 [PvPoke.com](https://pvpoke.com) is a resource for Pokemon GO PvP that includes a battle simulator, rankings, and team building. The project’s goal is to provide tools and insights to help players build their teams, and foster the game’s community spirit by making all of the underlying code public. I hope this project can inspire new tools or benefit the existing ones that continue to enhance our enjoyment of the game.
 
