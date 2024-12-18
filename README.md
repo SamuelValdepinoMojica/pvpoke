@@ -12,7 +12,9 @@ Cada jugador cuenta con un equipo de 3 pokemon, no se conoce el equipo del opone
 
 Los pokemon del oponente pueden ser aleatorios en cada epsisodio o pueden ser fijos.
 Cada jugador tiene un maximo de escudos en todo el episodio
+
 ###Propiedades del Pokemon
+
 Cada Pokémon tiene 3 propiedades principales:
 1. Puntos de salud (PS): Indica la vida restante del Pokémon. El promedio es 150 PS.
 2. Energía: Recurso usado para realizar ataques cargados. Tiene un límite máximo de 100 unidades.
@@ -48,6 +50,7 @@ Los ataques cargados
 ![Escudar](https://github.com/user-attachments/assets/57ec0138-9141-45e7-ac20-edcd2136ddc7)
 
 #Espacio de observación (EO)
+
 Las observacion en este ambiente es dicreto y esta comformado por lo siguiente:
 1. Pokemones por jugador
 2. Propiedades del jugador
@@ -55,11 +58,13 @@ Las observacion en este ambiente es dicreto y esta comformado por lo siguiente:
 El ambiente tiene un espcio de observacion de 20, ya que cada jugador cuenta con 10 caracteristicas obsevables
 
 #Recompensas
+
 -Ganar una batalla: +1
 -Empatar:+1
 -Perder la batalla:-1
 
-Fin del episodio
+#Fin del episodio
+
 Un episodio termina cuando se cumple una de las siguientes condiciones:
 1. Todos los Pokémon del aliado o enemigo alcanzan 0 PS.
 2. Se agota el tiempo de la partida.
