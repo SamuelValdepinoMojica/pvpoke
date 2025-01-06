@@ -1,2 +1,5 @@
 src/modules/config.php
 src/articles/article-assets
+/PVPOKE/DQN
+/PVPOKE/PPO
+/PVPOKE/logs

@@ -11,12 +11,19 @@ var peticion 			= false;
 var CHARGED_MOVE 		= 0;
 var MAKE_ACTION 		= false;
 var ASK_ACTION			= false;
-
+var wait = false;
 //Shields
 var SHIELD = false;
 var ACTOR = -1;
 var reset = false;
 var firstTime = false;
+var lastEnergy = 0;
+
+//Velocidad de ejecucion
+var TIEMPO_DE_ESPERA_ANIMACION_ESCUDO = 6000;
+var TIEMPO_DE_ESPERA_EJECUCION_ESCUDO = 8000;
+var TIEMPO_DE_ESPERA_FINAL_ESCUDO = 10000;
+var TIME_RESET = 1000;
 
 var file = webRoot+"data/training/teams/featured/featured-july.json?v=1";
 var featuredTeams = [];
@@ -82,12 +89,18 @@ var InterfaceMaster = (function () {
 				$(".battle-btn").on("click", function(){
 					console.log("TIEMPO_DE_EJECCION:", TIEMPO_EJECUCION);
 					TIEMPO_EJECUCION = 500;
+					I_WANT_PAUSE = false;
 					console.log("TIEMPO_EJECUCION:", TIEMPO_EJECUCION);
 					startBattle();
 				});
 				$(".battle-btn-fast").on("click", function(){
 					console.log("TIEMPO_EJECUCION:", TIEMPO_EJECUCION);
-					TIEMPO_EJECUCION = 100;
+					TIEMPO_EJECUCION = 10;
+					TIEMPO_DE_ESPERA_ANIMACION_ESCUDO = 20;
+					TIEMPO_DE_ESPERA_EJECUCION_ESCUDO = 40;
+					TIEMPO_DE_ESPERA_FINAL_ESCUDO = 60;
+					TIME_RESET = 25;
+					I_WANT_PAUSE = true;
 					console.log("TIEMPO_EJECUCION:", TIEMPO_EJECUCION);
 					startBattle();
 				});

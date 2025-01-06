@@ -29,7 +29,7 @@ var BattlerMaster = (function () {
 			var chargeRate = 2;
 			var chargeDecayRate = 0;
 			var phaseInterval;
-			var chargeTime = 6000;
+			var chargeTime = 6000;//6000;
 			var switchTime = 13000;
 			var phaseTimer = 4000;
 			var countdown = 0;
@@ -147,6 +147,7 @@ var BattlerMaster = (function () {
 				battle.setPlayers(players);
 				battle.setNewPokemon(players[0].getTeam()[0], 0, false);
 				battle.setNewPokemon(players[1].getTeam()[0], 1, false);
+				//gameClient.connect();
 				battle.emulate(self.update);
 
 				// Reset interface for new battle
@@ -306,7 +307,7 @@ var BattlerMaster = (function () {
 
 						case "game_over":
 							battleResult = response.result;
-
+							gameClient.sendGameState(players);
 							switch(response.result){
 								case "win":
 									$(".battle-window .end-screen .result").html("Victory!")
@@ -1222,7 +1223,7 @@ var BattlerMaster = (function () {
 				IS_GAME_PAUSED = false;
 				peticion = false;
 				battle.stop();
-
+				//gameClient.close();
 				// Manually set the previous team
 				if(properties.mode == "single"){
 					properties.teamSelectMethod = "manual";

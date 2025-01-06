@@ -77,7 +77,9 @@ function MatchHandler(){
 			player.setTeam(properties.teams[0]);
 
 			interface.close();
+			gameClient.connect();
 			battler.init(properties, battle, players);
+			//gameClient.close();
 		} else if(properties.mode == "tournament"){
 			interface.openTeamSelect(players, roundRecord);
 		}

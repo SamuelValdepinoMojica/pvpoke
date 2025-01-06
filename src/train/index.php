@@ -137,6 +137,13 @@ require_once '../header.php';
 </div>
 
 <button class="toggle-pause button">Toggle pause</button>
+<button class="Train-change button">Train episode</button>
+<select id="train-selector" class="Train-change button">
+    <option value="train-500">Normal</option>
+    <option value="train-150">Evalute</option>
+    <option value="train-10">Fast</option>
+    <!-- Añade más opciones según sea necesario -->
+</select>
 
 <div class="section battle">
 	<div class="battle-window">
@@ -171,6 +178,56 @@ require_once '../header.php';
 
 	});
 </script>
+<script>
+	$('.Fast-change').on('click', function(e){
+		if (TIEMPO_EJECUCION == 500) {
+			TIEMPO_EJECUCION = 100;
+		} else {
+			TIEMPO_EJECUCION = 500;
+		}
+		
+
+
+	});
+</script>
+<script>
+    $('#train-selector').on('change', function(e) {
+        var selectedValue = $(this).val();
+
+        if (selectedValue === "train-500") {
+            // Función para Train episode 1
+			TIEMPO_EJECUCION = 500;
+			TIEMPO_DE_ESPERA_ANIMACION_ESCUDO = 6000;
+			TIEMPO_DE_ESPERA_EJECUCION_ESCUDO = 8000;
+			TIEMPO_DE_ESPERA_FINAL_ESCUDO = 10000;
+			TIME_RESET = 1000;
+			//I_WANT_PAUSE = false;
+
+        } else if (selectedValue === 'train-150') {
+            // Función para Train episode 2
+            // Añade la lógica específica para episode 2
+			I_WANT_PAUSE = true;
+			TIEMPO_EJECUCION = 150;
+			TIEMPO_DE_ESPERA_ANIMACION_ESCUDO = 100;
+			TIEMPO_DE_ESPERA_EJECUCION_ESCUDO = 300;
+			TIEMPO_DE_ESPERA_FINAL_ESCUDO = 500;
+			TIME_RESET = 500;
+        } else if (selectedValue === 'train-10') {
+            // Función para Train episode 3
+            // Añade la lógica específica para episode 3
+			I_WANT_PAUSE = true;
+			TIEMPO_EJECUCION = 10;
+			TIEMPO_DE_ESPERA_ANIMACION_ESCUDO = 20;
+			TIEMPO_DE_ESPERA_EJECUCION_ESCUDO = 40;
+			TIEMPO_DE_ESPERA_FINAL_ESCUDO = 60;
+			TIME_RESET = 25;
+
+        }
+        // Añade más condiciones según sea necesario
+    });
+</script>
+
+
 <script src="<?php echo $WEB_ROOT; ?>js/training/BattleInterface.js?v=<?php echo $SITE_VERSION; ?>"></script>
 <script src="<?php echo $WEB_ROOT; ?>js/training/DecisionOption.js?v=<?php echo $SITE_VERSION; ?>"></script>
 <script src="<?php echo $WEB_ROOT; ?>js/training/TrainingAI.js?v=<?php echo $SITE_VERSION; ?>"></script>
