@@ -16,7 +16,7 @@ class PVPokeEnv(gym.Env):
             "psychic", "bug", "rock", "ghost", "dragon", "dark", "steel", "fairy"
         ]
         # Define action and observation space
-        self.action_space = spaces.Discrete(6)  # 6 possible actions: fast, charged1, charged2, switch1, switch2, shield
+        self.action_space = spaces.Discrete(7)  # 6 possible actions: fast, charged1, charged2, switch1, switch2, shield
 
         # Define observation space
         self.num_pokemon = 3
@@ -41,9 +41,10 @@ class PVPokeEnv(gym.Env):
             1: "charged1",
             2: "charged2",
             3: "shield",
-            4: "switch1",
-            5: "switch2",
-            6: "wait"
+            4: "no_shield",
+            5: "switch1",
+            6: "switch2",
+            7: "wait"
         }
 
     async def connect(self):

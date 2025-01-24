@@ -250,7 +250,7 @@ var BattlerMaster = (function () {
 							charge = 0;
 							charging = false;
 							phaseTimer = chargeTime;
-							phaseInterval = setInterval(chargeUpStep, 1000 / 60);
+							phaseInterval = setInterval(chargeUpStep, 100 / 6); // 1000 / 60
 
 							// Clear a previously buffered switch
 							bufferedSwitch = -1;
@@ -260,7 +260,7 @@ var BattlerMaster = (function () {
 							$(".shield-window").removeClass("closed");
 							$(".switch-sidebar").removeClass("active");
 							phaseTimer = chargeTime;
-							phaseInterval = setInterval(phaseStep, 1000 / 60);
+							phaseInterval = setInterval(phaseStep, 100 / 6); // 1000 / 60
 							interfaceLockout = 750;
 
 							// Clear a previously buffered switch
@@ -307,7 +307,8 @@ var BattlerMaster = (function () {
 
 						case "game_over":
 							battleResult = response.result;
-							gameClient.sendGameState(players);
+							//console.log("sendGameState", phase)
+							//gameClient.sendGameState(players,pokemon,phase);
 							switch(response.result){
 								case "win":
 									$(".battle-window .end-screen .result").html("Victory!")
@@ -1042,24 +1043,24 @@ var BattlerMaster = (function () {
 
 				// Report final individual and team data to db
 
-				if(teamsValid && players[1].getAI().getLevel()+1 >= 3){
-					$.ajax({
-				        url: "../data/training/postTraining.php",
-				        method: "POST",
-				        data: {
-				            pokemon: pokeObjs,
-							teams: teamObjs
-				        },
-				        success: function(response) {
-							if(! response.result && response.error){
-								console.error(response.error);
-							}
-				        },
-				        error: function(error) {
-				            console.log(error);
-				        }
-				    });
-				}
+				//if(teamsValid && players[1].getAI().getLevel()+1 >= 3){
+				//	$.ajax({
+				//        url: "../data/training/postTraining.php",
+				//        method: "POST",
+				//        data: {
+				//            pokemon: pokeObjs,
+				//			teams: teamObjs
+				//        },
+				//        success: function(response) {
+				//			if(! response.result && response.error){
+				//				console.error(response.error);
+				//			}
+				//        },
+				//        error: function(error) {
+				//            console.log(error);
+				//        }
+				//    });
+				//}
 			}
 
 			// Handler for the charge up interval
@@ -1223,6 +1224,7 @@ var BattlerMaster = (function () {
 				IS_GAME_PAUSED = false;
 				peticion = false;
 				battle.stop();
+				console.log("Replay battle click",phase);
 				//gameClient.close();
 				// Manually set the previous team
 				if(properties.mode == "single"){

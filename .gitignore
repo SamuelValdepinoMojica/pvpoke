@@ -3,3 +3,7 @@ src/articles/article-assets
 /PVPOKE/DQN
 /PVPOKE/PPO
 /PVPOKE/logs
+/PVPOKE/ppo_pvpoke_tensorboard
+/PVPOKE/models
+/PVPOKE/dqn_pvpoke_tensorboard
+/PVPOKE/ppo_pvpoke_final
