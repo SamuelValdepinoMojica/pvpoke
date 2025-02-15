@@ -40,7 +40,7 @@ client_connections: Dict[str, WebSocket] = {}
 async def websocket_endpoint(websocket: WebSocket, client_id: str, target_client_id: str):
     await websocket.accept()
     client_connections[client_id] = websocket
-    print(f"Client {client_id} connected")
+    #print(f"Client {client_id} connected")
     try:
         while True:
             data = await websocket.receive_text()

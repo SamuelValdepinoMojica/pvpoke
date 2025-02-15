@@ -59,11 +59,8 @@ var BattlerMaster = (function () {
 				turn = 0;
 				time = 0;
 
-				console.log("battle",b,"players",p,"properties", props)
-				players = p;
-				teamsUno = players[0].getTeam()
-				shields = players[0].getShields()
-				teamsDos = players[1].getTeam()
+				
+
 
 				// Event listeners
 				if(! listenersInitialized){
@@ -179,38 +176,6 @@ var BattlerMaster = (function () {
 				turn = response.turn;
 				time += 500;
 
-				
-					
-
-				// States of the battle
-				//if (phase != "game_paused"){
-				//	
-				//	console.log("response",response)
-				//	console.log("Turno", response.turn)
-				//	console.log("Team del jugador 1", teamsUno)
-				//	console.log("Equipo del jugador 1", teamsUno[0].aliasId, 
-				//				"Hp", Math.floor(teamsUno[0].hp/10), "Energia", Math.floor(teamsUno[0].energy/10))
-				//	//console.log("Equipo del jugador 1", teamsUno[1].aliasId,
-				//	//			"Hp", teamsUno[1].hp, "Energia", teamsUno[1].energy)
-				//	//console.log("Equipo del jugador 1", teamsUno[2].aliasId,
-				//	//			"Hp", teamsUno[2].hp, "Energia", teamsUno[2].energy)
-				//	console.log("Pokemon Actual", response.pokemon[0].aliasId)
-				//	console.log("Escudos", shields)
-				//	console.log("Team del jugador 2", teamsDos)
-				//	console.log("Team del jugador 2", teamsDos[0].aliasId,
-				//				"Hp", Math.floor(teamsDos[0].hp), "Energia", Math.floor(teamsDos[0].energy))
-				//	//console.log("Team del jugador 2", teamsDos[1].aliasId,
-				//	//			"Hp", teamsDos[1].hp, "Energia", teamsDos[1].energy)
-				//	//console.log("Team del jugador 2", teamsDos[2].aliasId,
-				//	//			"Hp", teamsDos[2].hp, "Energia", teamsDos[2].energy)
-				//	console.log("Pokemon Actual", response.pokemon[1].aliasId)
-				//						
-				//	console.log(response);
-				//	console.log(response.player)
-				//}
-		
-				//console.log(response?.pokemon[0]);
-				
 				// Interpret phase for player
 
 				if(response.phase == "suspend_charged"){
@@ -279,7 +244,7 @@ var BattlerMaster = (function () {
 							// If we're transitioning from the Charged Move minigame, submit the damage
 							if(phase == "suspend_charged_attack"){
 								var chargeMultiplier = Math.min(.25 + (.75 * (charge / maxCharge)), 1);
-								console.log("chargeMultiplier", chargeMultiplier)
+								
 								battle.setChargeAmount(chargeMultiplier);
 							}
 							break;
@@ -307,7 +272,12 @@ var BattlerMaster = (function () {
 
 						case "game_over":
 							battleResult = response.result;
-							//console.log("sendGameState", phase)
+							//console.log("battleResult", battleResult)
+							//console.log("teamAllyRemaining", gameClient.teamAllyRemaining)
+							//console.log("teamEnemyRemaining", gameClient.teamEnemyRemaining)
+							//console.log("Send game State Game Over", phase)
+							//gameClient.battleResult = battleResult;
+							//gameClient.isWaitingForServer = false;
 							//gameClient.sendGameState(players,pokemon,phase);
 							switch(response.result){
 								case "win":
@@ -330,7 +300,7 @@ var BattlerMaster = (function () {
 								$("body").removeClass("battle-active");
 								$(".battle-window").attr("phase","game_over_screen");
 								self.displayEndGameStats();
-								self.reportBattleAnalytics();
+								//self.reportBattleAnalytics();
 							}, 1000);
 
 							break;
@@ -1225,7 +1195,7 @@ var BattlerMaster = (function () {
 				peticion = false;
 				battle.stop();
 				console.log("Replay battle click",phase);
-				//gameClient.close();
+				
 				// Manually set the previous team
 				if(properties.mode == "single"){
 					properties.teamSelectMethod = "manual";

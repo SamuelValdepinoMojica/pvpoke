@@ -16,12 +16,16 @@ class PokemonGameClient {
 		this.client_id = "pvpoke";
 		this.target_id = "notebook";
 		this.currentAction = "";
+		this.currentIndexAlly = 0;
+		this.currentIndexEnemy = 0;
 		this.currentHpAlly = 0;
 		this.currentHpEnemy = 0;
 		this.hpStart;
 		this.rewards =  0;
 		this.teamAllyRemaining = 0;
 		this.teamEnemyRemaining = 0;
+		this.battleResult = "not_finished";
+
 
 
     }
@@ -39,7 +43,7 @@ class PokemonGameClient {
 		this.ws.onmessage = async (event) => {
 			try {
 				const response = JSON.parse(event.data);
-				//console.log ("Mensaje recibido del servidor: ", response);
+				// ("Mensaje recibido del servidor: ", response);
 				
 
 				if (response && response.message) {
@@ -51,30 +55,34 @@ class PokemonGameClient {
 		
 					// Aquí puedes manejar el contenido del mensaje según sea necesario
 
-					if (response.message === "reset") {
+					if (response.message == "reset") {
 						// Reiniciar el juego
 						//this.resetGame();
-						console.log("Contenido del mensaje: ", message);
+						
 						window.replayBattleClick();
 						
 						MAKE_ACTION = false;
 						this.isWaitingForServer = false;
+						console.log("Contenido del mensaje: Reset ", message, this.isWaitingForServer);
 
 					}
 					else{
+						
 						this.currentAction = action_mapping[message];
 						ACCIONES = action_mapping[message];
 						MAKE_ACTION = true;
 						this.isWaitingForServer = false;
+						console.log("Contenido del mensaje:1 ", message, this.isWaitingForServer);
 					}
 				}else if(response || response === 0){
 					const message = response;
-					//console.log("Contenido del mensaje: ", message);
+					
 					this.currentAction   = action_mapping[message];
 					// Aquí puedes manejar el contenido del mensaje según sea necesario
 					ACCIONES = action_mapping[message];
 					MAKE_ACTION = true;
 					this.isWaitingForServer = false;
+					console.log("Contenido del mensaje:2 ", message, this.isWaitingForServer);
 				}
 			} catch (e) {
 				console.error("Error al parsear el mensaje JSON: ", e);
@@ -94,6 +102,7 @@ class PokemonGameClient {
     async sendGameState(players, pokemon,phase, actor = -1, energy = -1) {
 		
         if (!this.isConnected || this.isWaitingForServer) {
+			console.log("No conectado o esperando respuesta del servidor", this.isConnected,this.isWaitingForServer,this.battleResult,this.currentIndexAlly,this.currentIndexEnemy,this.battleResult );
             return;
         }
 
@@ -111,8 +120,8 @@ class PokemonGameClient {
 				hp: players[0].getTeam()[i].hp/this.hpStart[0][i],
 			};
 		}
-		teamAlly.remainingPokemon = this.teamAllyRemaining;
-		teamAlly.shield = players[0].getShields();
+		teamAlly.remainingPokemon = this.teamAllyRemaining/3;
+		teamAlly.shield = players[0].getShields()/2;
 		//teamAlly.currentPokemon = players[0].getCurrentPokemonIndex();
 		
 		// Construir el estado del equipo enemigo
@@ -124,64 +133,33 @@ class PokemonGameClient {
 				hp: players[1].getTeam()[i].hp/this.hpStart[1][i],
 			};
 		}
-		teamEnemy.remainingPokemon = this.teamEnemyRemaining;
-		teamEnemy.shield = players[1].getShields();
+		teamEnemy.remainingPokemon = this.teamEnemyRemaining/3;
+		teamEnemy.shield = players[1].getShields()/2;
 
-        // let doneAlly = true;
-		// // if all pokemon in the enemy ally or enemy team are fainted, the game is done
-		// for (let i = 0; i < players[0].getTeam().length; i++) {
-		// 	console.log("Pokemon Ally",i,": ", players[0].getTeam()[i].hp);
-		// 	if (players[0].getTeam()[i].hp > 0) {
-				
-		// 		doneAlly = false;
-		// 		break;
-		// 	}
-		// }
-		// let doneEnemy = true;
-		// console.log("Pokemon restantes aliado: ", players[0].getRemainingPokemon());
-		// console.log("Pokemon restantes enemigo: ", players[1].getRemainingPokemon());
-        // for (let i = 0; i < players[1].getTeam().length; i++) {
-		// 	console.log("Pokemon Enemy",i,": ", players[1].getTeam()[i].hp);
-        //     if (players[1].getTeam()[i].hp > 0) {
-				
-        //         doneEnemy = false;
-        //         break;
-        //     }
-        // }
 		let done = false;
 		// DONE si todos los pokemon en el equipo enemigo o aliado están desmayados
-		console.log("Pokemon restantes aliado: ", players[0].getRemainingPokemon(), this.teamAllyRemaining);
-		console.log("Pokemon restantes enemigo: ", players[1].getRemainingPokemon(), this.teamEnemyRemaining);
 
-		if (this.teamAllyRemaining <= 0 || this.teamEnemyRemaining <= 0) {
+		if (this.battleResult != "not_finished") {
+
 			done = true;
 		}
-		
+
 		
 		let reward = 0;
-		if (this.teamEnemyRemaining <= 0) {
+		if (this.battleResult == "win") {
 			reward = +1;
-		} else if (this.teamAllyRemaining <= 0) {
+		} else if (this.battleResult == "loss") {
 			reward = -1;
 		}
+		else if (this.battleResult == "tie") {
+			reward = 0;
+		}
 
-		// recompensa por la diferencia de hp entre el estado actual y el estado anterior
 
-		reward += (pokemon[0].hp-this.currentHpAlly)/this.hpStart[0][pokemon[0].index] - (pokemon[1].hp - this.currentHpEnemy) /this.hpStart[1][pokemon[0].index];
+		reward += (pokemon[0].hp-this.currentHpAlly)/this.hpStart[0][this.currentIndexAlly] - (pokemon[1].hp - this.currentHpEnemy) /this.hpStart[1][this.currentIndexEnemy];
 		this.currentHpAlly = pokemon[0].hp;
 		this.currentHpEnemy = pokemon[1].hp;
-		// if (this.currentAction === "charged1" && lastEnergy< pokemon[0].chargedMoves[0].energy || this.currentAction === "charged2" && lastEnergy < pokemon[0].chargedMoves[1].energy) {
-		// 	reward -= 0.1;
-		// } 
-		// else if ((this.currentAction === "shield"|| this.currentAction === "no_shield") && phase != "suspend_charge" || players[0].getShields() == 0) {
-		// 	reward -= 0.1;
-		// }
-		// else if ((this.currentAction === "switch1"||this.currentAction == "switch2" )&& players[0].getSwitchTimer()>0 && phase != "suspend_switch") {
-		// 	reward -= 0.1;
-		// }
 
-		//console.log("Reward: ", reward);
-		console.log("Done: ", done);
 		let gameState = {
 			state: {
 				teamAlly: teamAlly,
@@ -192,7 +170,6 @@ class PokemonGameClient {
 			done: done
 		};
         this.isWaitingForServer = true;
-		//console.log("Sending game state to server");
         this.ws.send(JSON.stringify(gameState));
     }
 	close() {
@@ -1219,7 +1196,7 @@ function Battle(){
 				var action = turnActions[n];
 				var poke = pokemon[action.actor];
 				var opponent = pokemon[ (action.actor == 0) ? 1 : 0 ];
-	
+
 				switch(action.type){
 	
 					case "fast":
@@ -1289,6 +1266,7 @@ function Battle(){
 						}
 						break;
 				}
+				
 				self.processAction(action, poke, opponent);
 			}
 			// Set previous turn actions and clear the current turn
@@ -1405,8 +1383,11 @@ function Battle(){
 					} else{
 						result = "loss";
 					}
-	
-					self.dispatchUpdate({ result: result });
+					gameClient.battleResult = result;
+					gameClient.isWaitingForServer = false;
+					gameClient.sendGameState(players,pokemon,phase);
+					if(train)
+						self.dispatchUpdate({ result: result });
 					clearInterval(mainLoopInterval);
 				}
 	
@@ -1476,8 +1457,15 @@ function Battle(){
 
 		return timeline;
 	}
+	//Reciben pokemon y equipo del jugador
+	function currentIndex(pokemon,players){
+		for( var i = 0; i < players.length; i++){
+			if (players[i].speciesId == pokemon.speciesId) {
+				return i;
+			}
+		}
 
-
+	}
 	this.emulate = function(callback){
 		function switchPokemon(newIndex) {
 			// Validate switch is possible
@@ -1492,7 +1480,7 @@ function Battle(){
 			
 			return true;
 		}
-		console.log("emulate");
+		
 		var activeIndex = 0; // Track current active Pokemon
 		var benchIndices = [1, 2]; // Track Pokemon in bench
 
@@ -1522,7 +1510,9 @@ function Battle(){
 
 		var countdown = 5;
 		phase = "countdown";
-		self.dispatchUpdate();
+		if(train)
+			self.dispatchUpdate();
+		
 
 		// Initiate countdown
 		gameClient.hpStart = [];
@@ -1534,7 +1524,7 @@ function Battle(){
 				gameClient.hpStart[i][n] = players[i].getTeam()[n].hp;
 			}
 		}
-
+		
 
 
 		var countdownInterval = setInterval(function(){
@@ -1543,21 +1533,30 @@ function Battle(){
 			if(countdown < 1){
 				phase = "neutral";
 				clearInterval(countdownInterval);
-				self.dispatchUpdate();
+				if(train)
+					self.dispatchUpdate();
 				if (I_WANT_PAUSE) {
-					console.log("Send game state RESET");
+					
 					ACCIONES = "";
 					gameClient.currentHpAlly = players[0].getTeam()[0].hp;
 					gameClient.currentHpEnemy = players[1].getTeam()[0].hp;
 					gameClient.teamAllyRemaining = players[0].getRemainingPokemon();
 					gameClient.teamEnemyRemaining = players[1].getRemainingPokemon();
+					gameClient.currentIndexAlly = currentIndex(pokemon[0],players[0].getTeam());
+					gameClient.currentIndexEnemy = currentIndex(pokemon[1],players[1].getTeam());
+					gameClient.battleResult = "not_finished";
+					
+					console.log("Send Game State Reset", gameClient.isWaitingForServer);
 					gameClient.sendGameState(players,pokemon,phase);
+					gameClient.isWaitingForServer = false;
+					lastPhase = "neutral";
 					lastEnergy = 0;
 					IS_GAME_PAUSED = true;
 
 				}
 			} else{
-				self.dispatchUpdate({ countdown: countdown });
+				if(train)
+					self.dispatchUpdate({ countdown: countdown });
 			}
 
 		}, TIME_RESET);//1000-500-25
@@ -1568,6 +1567,17 @@ function Battle(){
 		// Establecer la conexión WebSocket una sola vez
 
 		mainLoopInterval =	 setInterval(async function(){
+			
+			 if (ACCIONES == "charged1" && pokemon[0].energy < pokemon[0].chargedMoves[0].energy || ACCIONES == "charged2" && pokemon[0].energy < pokemon[0].chargedMoves[1].energy) {
+			 	ACCIONES = "fast";
+			 } 
+			else if ((ACCIONES == "shield"|| ACCIONES === "no_shield") && lastPhase != "suspend_charged") {
+				ACCIONES = "fast";
+			}
+			 else if ((ACCIONES === "switch1"||ACCIONES == "switch2" )&& (players[0].getSwitchTimer()>0 || players[0].getRemainingPokemon() < 2) && lastPhase != "suspend_switch" ) {
+			 	ACCIONES = "fast";
+			 }
+
 
 			if	(phase == "suspend_charged" ) {
 
@@ -1607,6 +1617,7 @@ function Battle(){
 
 				if(MAKE_ACTION && ACCIONES !== ""){
 					if(ASK_ACTION){
+						
 						if (ACCIONES !== "switch1" && ACCIONES !== "switch2") {
 							ACCIONES = "switch1"; // Valor por defecto si la entrada no es válida
 						}
@@ -1624,11 +1635,14 @@ function Battle(){
 			// Estado para respuesta del atque cargado(shield||porcentaje de carga o  switch)
 			if( ( pokemon[0].hp <= 0 || pokemon[1].hp <= 0  ||phase == "suspend_charged") &&firstTime ){
 				firstTime = false;
-				console.log(" Send game state suspend_switch || suspend_charged");
+				
 				gameClient.teamAllyRemaining = players[0].getRemainingPokemon();
 				gameClient.teamEnemyRemaining = players[1].getRemainingPokemon();
+				gameClient.currentIndexAlly = currentIndex(pokemon[0],players[0].getTeam());
+				gameClient.currentIndexEnemy = currentIndex(pokemon[1],players[1].getTeam());
+				console.log("Send Game State 2",ACCIONES,gameClient.isWaitingForServer);
 				gameClient.sendGameState(players,pokemon,phase);
-
+				
 
 			}
 
@@ -1650,7 +1664,7 @@ function Battle(){
 					case "fast":
 					//gameClient.onmessage(event);
 						IS_GAME_PAUSED=false;
-						//console.log("ACCIONES",ACCIONES,phase);
+						
 						if(phase != "suspend_charged" || phase != "suspend_switch")
 							self.setPause(IS_GAME_PAUSED);
 						
@@ -1658,7 +1672,7 @@ function Battle(){
 						break;
 			 		case "charged1":
 						IS_GAME_PAUSED=false;
-						//console.log("ACCIONES",ACCIONES);
+						
 						self.setPause(IS_GAME_PAUSED);
 						
 						self.queueAction(0, "charged", 0);
@@ -1666,7 +1680,7 @@ function Battle(){
 						break;
 					case "charged2":
 						IS_GAME_PAUSED=false;
-						//console.log("ACCIONES",ACCIONES);
+						
 						self.setPause(IS_GAME_PAUSED);
 						
 						self.queueAction(0, "charged", 1);
@@ -1680,11 +1694,11 @@ function Battle(){
 						const switchIndex1 = benchIndices[0];
 						if (switchPokemon(switchIndex1)) {
 							self.queueAction(0, "switch", switchIndex1);
-							//console.log("Switched to Pokemon at index:", switchIndex1);
+							
 							
 						}
 						self.setPause(IS_GAME_PAUSED);
-						//console.log("Players.switchTimer",players[0].getSwitchTimer());
+						
 						break;
 				
 					case "switch2":
@@ -1694,45 +1708,31 @@ function Battle(){
 						const switchIndex2 = benchIndices[1];
 						if (switchPokemon(switchIndex2)) {
 							self.queueAction(0, "switch", switchIndex2);
-							//onsole.log("Switched to Pokemon at index:", switchIndex2);
+							
 							
 						}
 						self.setPause(IS_GAME_PAUSED);
-						//console.log("Players.switchTimer",players[0].getSwitchTimer());
+						
 						break;
 
 					case "wait":
 						IS_GAME_PAUSED=false;
-						//console.log("ACCIONES",ACCIONES);
-						//self.setPause(IS_GAME_PAUSED);
-						
-						//self.queueAction(0, "wait", 0);
+
 						break;
+
 					case "shield":
 						IS_GAME_PAUSED=false;
-						//console.log("ACCIONES",ACCIONES);
+						
 						if(phase != "suspend_charged" )
 							self.setPause(IS_GAME_PAUSED);
 						SHIELD = true;
 						break;
+
 					case "no_shield":
 						IS_GAME_PAUSED=false;
 						if(phase != "suspend_charged" )
-							self.setPause(IS_GAME_PAUSED);
-						//console.log("ACCIONES",ACCIONES);
-						
+							self.setPause(IS_GAME_PAUSED);	
 						SHIELD = false;
-
-						break;
-					case "reset":
-						
-						reset = true;
-						IS_GAME_PAUSED=false;
-						console.log("ACCIONES",ACCIONES);
-						self.setPause(IS_GAME_PAUSED);
-						
-						window.replayBattleClick();
-						
 
 						break;
 					case "continue":
@@ -1755,8 +1755,15 @@ function Battle(){
 				self.emulatestep();
 				gameClient.teamAllyRemaining = players[0].getRemainingPokemon();
 				gameClient.teamEnemyRemaining = players[1].getRemainingPokemon();
-				//console.log("Send game state 1",ACCIONES,phase,"hp",pokemon[0].hp,"hp1", pokemon[1].hp,"first time:",firstTime);
-				if( I_WANT_PAUSE == true && phase == "neutral" && pokemon[0].cooldown <= 500 || phase == "game_over"){
+				if(gameClient.currentIndexAlly != currentIndex(pokemon[0],players[0].getTeam()) || gameClient.currentIndexEnemy != currentIndex(pokemon[1],players[1].getTeam())){
+					gameClient.currentHpAlly = pokemon[0].hp;
+					gameClient.currentHpEnemy = pokemon[1].hp;
+					gameClient.currentIndexAlly = currentIndex(pokemon[0],players[0].getTeam());
+					gameClient.currentIndexEnemy = currentIndex(pokemon[1],players[1].getTeam());
+				}
+				if(train)						
+					self.dispatchUpdate();
+				if( I_WANT_PAUSE == true &&( phase == "neutral" && pokemon[0].cooldown <= 500) || phase == "game_over"){
 					
 					
 					if(phaseProps)
@@ -1765,20 +1772,21 @@ function Battle(){
 						actor = -1;
 
 					gameClient.sendGameState(players,pokemon,phase, actor,lastEnergy);
-					console.log("Send game state step",players[0].getRemainingPokemon(),players[1].getRemainingPokemon());
+					console.log("Send Game State Despues del step",ACCIONES,gameClient.isWaitingForServer);
 
 				}
-				
-				self.dispatchUpdate();
-				ACCIONES = "";
-				if(I_WANT_PAUSE && phase == "neutral" && pokemon[0].cooldown <= 500 ){
 
+				ACCIONES = "";
+
+				if(I_WANT_PAUSE && phase == "neutral" && pokemon[0].cooldown <= 500 ){
+					lastPhase = phase;
 					IS_GAME_PAUSED=true;
 					self.setPause(IS_GAME_PAUSED );
 				}	
 
 				else if (I_WANT_PAUSE && phase == "suspend_charged" || I_WANT_PAUSE && phase == "suspend_switch" || I_WANT_PAUSE && phase == "game_paused" ){
 					IS_GAME_PAUSED=true;
+					lastPhase = phase;
 				}
 				
 
@@ -3097,7 +3105,7 @@ function Battle(){
 						firstTime = true;
 						chargeAmount = 0;
 						playerUseShield = false;
-						//console.log("Suspending charged move");
+						
 						if(players[opponent.index].getAI() !== false){
 							playerUseShield = players[opponent.index].getAI().decideShield(poke, opponent, move);
 						}
@@ -3105,14 +3113,15 @@ function Battle(){
 						// Initiate the move animation
 						setTimeout(function(){
 							phase = "animating";
+							if(train){
 							self.dispatchUpdate({
 								type: "charged",
 								actor: poke.index,
 								moveName: move.name,
 								moveType: move.type
 							});
-							//firstTime = true;
 							
+							}
 						}, TIEMPO_DE_ESPERA_ANIMACION_ESCUDO);//6000-100-25
 						ACTOR = poke.index;
 						// Execute this move after a set amount of time
@@ -3120,7 +3129,7 @@ function Battle(){
 
 							// Use the move
 							if (poke.index == 0) {
-								//console.log("Charge amount: ", chargeAmount);
+								
 								self.setChargeAmount(CHARGED_MOVE);
 							}
 							else {
@@ -3147,11 +3156,15 @@ function Battle(){
 						phaseTimeout = setTimeout(function(){
 							phase = "neutral";
 							SHIELD = false;	
-							//if(I_WANT_PAUSE)			
-							IS_GAME_PAUSED=false;
+							// Para empezar al mismo tiempo los fast moves
+							if(I_WANT_PAUSE)			
+							IS_GAME_PAUSED=true;
 							pokemon[0].cooldown = 0;	
-							//gameClient.sendGameState(players,pokemon,phase, phaseProps,energy = lastEnergy);
-							//console.log("Send game state Final Escudo",phase, phaseProps);
+							gameClient.teamAllyRemaining = players[0].getRemainingPokemon();
+							gameClient.teamEnemyRemaining = players[1].getRemainingPokemon();
+							//console.log("sendGameState step Final de suspend Charge");
+							gameClient.sendGameState(players,pokemon,phase, energy = lastEnergy);
+							
 						}, TIEMPO_DE_ESPERA_FINAL_ESCUDO);//10000-500-75
 						
 

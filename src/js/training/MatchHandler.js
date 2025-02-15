@@ -21,6 +21,7 @@ function MatchHandler(){
 		interface = InterfaceMaster.getInstance(self);
 		console.log(interface);
 		battler = BattlerMaster.getInstance(self, battle);
+		gameClient.connect();
 	}
 
 	this.init();
@@ -77,9 +78,9 @@ function MatchHandler(){
 			player.setTeam(properties.teams[0]);
 
 			interface.close();
-			gameClient.connect();
+			
 			battler.init(properties, battle, players);
-			gameClient.close();
+			
 		} else if(properties.mode == "tournament"){
 			interface.openTeamSelect(players, roundRecord);
 		}
@@ -161,6 +162,7 @@ function MatchHandler(){
 		$(".section.team-select").hide();
 		$(".battle-window").attr("phase","");
 		interface.open();
+		gameClient.close();
 	}
 
 	// Callback that lets MatchHandler know the AI's roster is ready to begin play

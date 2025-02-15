@@ -7,3 +7,6 @@ src/articles/article-assets
 /PVPOKE/models
 /PVPOKE/dqn_pvpoke_tensorboard
 /PVPOKE/ppo_pvpoke_final
+/PVPOKE/a2c_pvpoke_tensorboard
+/PVPOKE/experiments
+/PVPOKE/log

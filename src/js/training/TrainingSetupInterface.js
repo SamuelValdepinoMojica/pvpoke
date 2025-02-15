@@ -18,6 +18,7 @@ var ACTOR = -1;
 var reset = false;
 var firstTime = false;
 var lastEnergy = 0;
+var train = true;
 
 //Velocidad de ejecucion
 var TIEMPO_DE_ESPERA_ANIMACION_ESCUDO = 6000;
@@ -90,17 +91,19 @@ var InterfaceMaster = (function () {
 					console.log("TIEMPO_DE_EJECCION:", TIEMPO_EJECUCION);
 					TIEMPO_EJECUCION = 500;
 					I_WANT_PAUSE = false;
+					train = true;
 					console.log("TIEMPO_EJECUCION:", TIEMPO_EJECUCION);
 					startBattle();
 				});
 				$(".battle-btn-fast").on("click", function(){
 					console.log("TIEMPO_EJECUCION:", TIEMPO_EJECUCION);
-					TIEMPO_EJECUCION = 10;
-					TIEMPO_DE_ESPERA_ANIMACION_ESCUDO = 20;
-					TIEMPO_DE_ESPERA_EJECUCION_ESCUDO = 40;
-					TIEMPO_DE_ESPERA_FINAL_ESCUDO = 60;
-					TIME_RESET = 25;
+					TIEMPO_EJECUCION = 1;
+					TIEMPO_DE_ESPERA_ANIMACION_ESCUDO = 3;
+					TIEMPO_DE_ESPERA_EJECUCION_ESCUDO = 4;
+					TIEMPO_DE_ESPERA_FINAL_ESCUDO = 7;
+					TIME_RESET = 4;
 					I_WANT_PAUSE = true;
+					train = false;
 					console.log("TIEMPO_EJECUCION:", TIEMPO_EJECUCION);
 					startBattle();
 				});
