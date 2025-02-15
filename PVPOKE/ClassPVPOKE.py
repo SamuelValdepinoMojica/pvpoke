@@ -16,24 +16,58 @@ class PVPokeEnv(gym.Env):
             "psychic", "bug", "rock", "ghost", "dragon", "dark", "steel", "fairy"
         ]
         # Define action and observation space
-        self.action_space = spaces.Discrete(7)  # 6 possible actions: fast, charged1, charged2, switch1, switch2, shield
+        self.action_space = spaces.Discrete(7)  # 7 possible actions: fast, charged1, charged2, switch1, switch2, shield
 
         # Define observation space
-        self.num_pokemon = 3
+        self.num_pokemon = 3  # 3 Pokémon per team
+        num_teams = 2  # ally and enemy.
+
         dim_types = len(self.pokemon_types)# 18 types
         num_types = 2 * dim_types  # type1 and type2 per pokemon
-        num_attributes_per_pokemon = 2 + num_types  # energy, hp, type1 and type2
-        num_teams = 2  # ally and enemy
-        additional_attributes = 4 # shields per team and remaining pokemon per team
 
-        observation_dim = (num_teams * self.num_pokemon * num_attributes_per_pokemon + additional_attributes)
+        attrs_per_pokemon = 2 + num_types # energy, hp, type1 and type2
+        attrs_per_team = 2 # shields per team and remaining pokemon per team
 
+        observation_dim = num_teams * (self.num_pokemon * attrs_per_pokemon + attrs_per_team)
+      # Define low and high for each attribute
+        low = np.zeros(observation_dim)
+        high = np.zeros(observation_dim)
+
+        # Example ranges for each attribute
+        for team in range(num_teams):
+            # Índice base para el bloque de este equipo
+            team_base = team * (self.num_pokemon * attrs_per_pokemon + attrs_per_team)
+
+            # Para cada Pokémon del equipo, asignamos energía y HP
+            for p in range(self.num_pokemon):
+                base_index = team_base + p * attrs_per_pokemon
+                low[base_index] = 0       # energía min
+                high[base_index] = 100    # energía max
+                low[base_index + 1] = 0   # HP min
+                high[base_index + 1] = 450 # HP max
+                        # Asignar rangos para los atributos de tipo (type1 y type2)
+                for t in range(num_types):
+                    low[base_index + 2 + t] = 0   # tipo min
+                    high[base_index + 2 + t] = 1   # tipo max
+
+            # Atributos del equipo (después de todos los Pokémon)
+            # Escudos
+            remaining_index = team_base + self.num_pokemon * attrs_per_pokemon
+            low[remaining_index] = 0
+            high[remaining_index] = 3
+            # Pokémon restantes
+            shields_index = remaining_index + 1
+            low[shields_index] = 0
+            high[shields_index] = 2
+
+            
         self.observation_space = spaces.Box(
-            low=0, 
-            high=450, 
+            low=0,
+            high=high,
             shape=(observation_dim,),  # Note the comma to make it a tuple
-            dtype=np.float32
+            dtype=np.float64
         )
+
 
         # Define action mapping
         self.action_mapping = {
@@ -54,6 +88,7 @@ class PVPokeEnv(gym.Env):
 
     async def reset_async(self, seed=None):
         """Reinicia el entorno y devuelve el estado inicial."""
+        
         if not self.websocket:
             raise ValueError("WebSocket is not connected. Call `connect()` first.")
         
@@ -162,3 +197,12 @@ class PVPokeEnv(gym.Env):
         assert obs_array.shape[0] == self.observation_space.shape[0], f"Expected shape {self.observation_space.shape}, got {obs_array.shape}"
 
         return obs_array
+    
+    def rand_step(self, *args):
+        """Realiza una acción aleatoria en el entorno.
+        
+        Args:
+            *args: Argumentos adicionales que pueden ser pasados por wrappers
+        """
+        action = self.action_space.sample()
+        return self.step(action)
