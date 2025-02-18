@@ -114,27 +114,25 @@ class PokemonGameClient {
 		// Construir el estado del equipo aliado
 		for (let i = 0; i < players[0].getTeam().length; i++) {
 			teamAlly[`pokemon${i + 1}`] = {
-				type1: players[0].getTeam()[i].types[0],
-				type2: players[0].getTeam()[i].types[1] || 0,
-				energy: players[0].getTeam()[i].energy/100,
-				hp: players[0].getTeam()[i].hp/this.hpStart[0][i],
+
+				energy: Math.round(players[0].getTeam()[i].energy/10),
+				hp: Math.round((players[0].getTeam()[i].hp / this.hpStart[0][i]) * 10),
 			};
 		}
-		teamAlly.remainingPokemon = this.teamAllyRemaining/3;
-		teamAlly.shield = players[0].getShields()/2;
+		teamAlly.remainingPokemon = this.teamAllyRemaining;
+		teamAlly.shield = players[0].getShields();
 		//teamAlly.currentPokemon = players[0].getCurrentPokemonIndex();
 		
 		// Construir el estado del equipo enemigo
 		for (let i = 0; i < players[1].getTeam().length; i++) {
 			teamEnemy[`pokemon${i + 1}`] = {
-				type1: players[1].getTeam()[i].types[0],
-				type2: players[1].getTeam()[i].types[1] || 0,
-				energy: players[1].getTeam()[i].energy/100,
-				hp: players[1].getTeam()[i].hp/this.hpStart[1][i],
+
+				energy: Math.round(players[1].getTeam()[i].energy/10),
+				hp: Math.round((players[1].getTeam()[i].hp / this.hpStart[1][i]) * 10),
 			};
 		}
-		teamEnemy.remainingPokemon = this.teamEnemyRemaining/3;
-		teamEnemy.shield = players[1].getShields()/2;
+		teamEnemy.remainingPokemon = this.teamEnemyRemaining;
+		teamEnemy.shield = players[1].getShields();
 
 		let done = false;
 		// DONE si todos los pokemon en el equipo enemigo o aliado están desmayados
@@ -156,7 +154,7 @@ class PokemonGameClient {
 		}
 
 
-		reward += (pokemon[0].hp-this.currentHpAlly)/this.hpStart[0][this.currentIndexAlly] - (pokemon[1].hp - this.currentHpEnemy) /this.hpStart[1][this.currentIndexEnemy];
+		//reward += (pokemon[0].hp-this.currentHpAlly)/this.hpStart[0][this.currentIndexAlly] - (pokemon[1].hp - this.currentHpEnemy) /this.hpStart[1][this.currentIndexEnemy];
 		this.currentHpAlly = pokemon[0].hp;
 		this.currentHpEnemy = pokemon[1].hp;
 
