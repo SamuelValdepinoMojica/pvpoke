@@ -53,10 +53,9 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str, target_client
                 data_parsed = {"message": data}
 
             # Enviar a cliente destino
-            #print(f"Type of data_parsed: {type(data_parsed)}")
+
             if target_client_id in client_connections:
-                #print(f"Sending message to {target_client_id} from {client_id}")
-                #print(f"Data: {data_parsed}")
+
                 target_client = client_connections[target_client_id]
                 await target_client.send_json(data_parsed)
                 

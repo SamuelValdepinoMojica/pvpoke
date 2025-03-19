@@ -197,11 +197,12 @@ require_once '../header.php';
         if (selectedValue === "train-500") {
             // Función para Train episode 1
 			TIEMPO_EJECUCION = 500;
+			TIEMPO_EJECUCION_SOCKET = 500;
 			TIEMPO_DE_ESPERA_ANIMACION_ESCUDO = 6000;
 			TIEMPO_DE_ESPERA_EJECUCION_ESCUDO = 8000;
 			TIEMPO_DE_ESPERA_FINAL_ESCUDO = 10000;
 			TIME_RESET = 1000;
-			train = true;
+			train = false;
 			//I_WANT_PAUSE = false;
 
         } else if (selectedValue === 'train-150') {
@@ -209,21 +210,23 @@ require_once '../header.php';
             // Añade la lógica específica para episode 2
 			I_WANT_PAUSE = true;
 			TIEMPO_EJECUCION = 150;
+			TIEMPO_EJECUCION_SOCKET = 150;
 			TIEMPO_DE_ESPERA_ANIMACION_ESCUDO = 100;
 			TIEMPO_DE_ESPERA_EJECUCION_ESCUDO = 300;
 			TIEMPO_DE_ESPERA_FINAL_ESCUDO = 500;
 			TIME_RESET = 500;
-			train = true;
+			train = false;
         } else if (selectedValue === 'train-10') {
             // Función para Train episode 3
             // Añade la lógica específica para episode 3
 			I_WANT_PAUSE = true;
-			TIEMPO_EJECUCION = 1; //5
-			TIEMPO_DE_ESPERA_ANIMACION_ESCUDO =3;//10
-			TIEMPO_DE_ESPERA_EJECUCION_ESCUDO = 4;//20
-			TIEMPO_DE_ESPERA_FINAL_ESCUDO = 7;//30
+			TIEMPO_EJECUCION = 0.5; //5
+			TIEMPO_EJECUCION_SOCKET = 0;
+			TIEMPO_DE_ESPERA_ANIMACION_ESCUDO =1;//10
+			TIEMPO_DE_ESPERA_EJECUCION_ESCUDO = 2;//20
+			TIEMPO_DE_ESPERA_FINAL_ESCUDO = 3;//30
 			TIME_RESET = 4;//15
-			train = false;
+			train = true;
 
         }
         // Añade más condiciones según sea necesario

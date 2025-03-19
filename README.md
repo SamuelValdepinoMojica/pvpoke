@@ -118,7 +118,7 @@ nest_asyncio.apply()
 
 # Crear una instancia del entorno y conectarse
 env = PVPokeEnv("ws://localhost:8000/ws", "notebook", "pvpoke")
-asyncio.run(env.connect())
+env.loop.run_until_complete(env.connect())
 
 # Resetear el ambiente
 observation, info = env.reset()

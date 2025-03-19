@@ -159,7 +159,11 @@ var BattlerMaster = (function () {
 				$(".switch-window .pokemon, .switch-sidebar .pokemon").show();
 				$(".battle-window").attr("mode", props.mode);
 
-				self.updateSwitchWindow();
+				if(!train)
+				{
+					self.updateSwitchWindow();	
+				}
+				
 
 				$("body").addClass("battle-active");
 
@@ -1194,7 +1198,7 @@ var BattlerMaster = (function () {
 				IS_GAME_PAUSED = false;
 				peticion = false;
 				battle.stop();
-				console.log("Replay battle click",phase);
+				//console.log("Replay battle click",phase);
 				
 				// Manually set the previous team
 				if(properties.mode == "single"){
