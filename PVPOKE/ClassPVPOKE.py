@@ -8,10 +8,11 @@ import nest_asyncio
 nest_asyncio.apply()
 
 class PVPokeEnv(gym.Env):
-    def __init__(self, uri, client_id, target_client_id):
+    def __init__(self, uri, client_id, target_client_id, battle_format="3v3"):
         super(PVPokeEnv, self).__init__()
         self.uri = f"{uri}/{client_id}/{target_client_id}"
         self.websocket = None
+        self.battle_format = battle_format
         
         self.loop = asyncio.get_event_loop()
         self.current_state = None
@@ -19,59 +20,73 @@ class PVPokeEnv(gym.Env):
             "normal", "fire", "water", "electric", "grass", "ice", "fighting", "poison", "ground", "flying",
             "psychic", "bug", "rock", "ghost", "dragon", "dark", "steel", "fairy"
         ]
-        # Define action and observation space
-        self.action_space = spaces.Discrete(7)  # 7 possible actions: fast, charged1, charged2, switch1, switch2, shield
+        
+        # Configurar según el formato de batalla
+        if battle_format == "1v1":
+            self.num_pokemon = 1
+            self.action_space = spaces.Discrete(4)  # fast, charged1, charged2, shield
+            energy_max = 5
+            hp_max = 5
+            attrs_per_pokemon = 2  # energy, hp
+            attrs_per_team = 1     # shields
+            dtype = np.int64
+        else:  # 3v3
+            self.num_pokemon = 3
+            self.action_space = spaces.Discrete(7)  # fast, charged1, charged2, shield, no_shield, switch1, switch2
+            energy_max = 100
+            hp_max = 450
+            attrs_per_pokemon = 2 + 2 * len(self.pokemon_types)  # energy, hp, types
+            attrs_per_team = 2     # shields, remaining pokemon
+            dtype = np.float64
 
         # Define observation space
-        self.num_pokemon = 3  # 3 Pokémon per team
         num_teams = 2  # ally and enemy.
-
-        dim_types = len(self.pokemon_types)# 18 types
+        dim_types = len(self.pokemon_types)  # 18 types
         num_types = 2 * dim_types  # type1 and type2 per pokemon
 
-        attrs_per_pokemon = 2 + num_types # energy, hp, type1 and type2
-        attrs_per_team = 2 # shields per team and remaining pokemon per team
-
         observation_dim = num_teams * (self.num_pokemon * attrs_per_pokemon + attrs_per_team)
-      # Define low and high for each attribute
+        
+        # Define low and high for each attribute
         low = np.zeros(observation_dim)
         high = np.zeros(observation_dim)
-
-        # Example ranges for each attribute
+        
+        # Configure observation space based on battle format
         for team in range(num_teams):
-            # Índice base para el bloque de este equipo
             team_base = team * (self.num_pokemon * attrs_per_pokemon + attrs_per_team)
 
-            # Para cada Pokémon del equipo, asignamos energía y HP
+            # Para cada Pokémon del equipo
             for p in range(self.num_pokemon):
                 base_index = team_base + p * attrs_per_pokemon
-                low[base_index] = 0       # energía min
-                high[base_index] = 100    # energía max
-                low[base_index + 1] = 0   # HP min
-                high[base_index + 1] = 450 # HP max
-                        # Asignar rangos para los atributos de tipo (type1 y type2)
-                for t in range(num_types):
-                    low[base_index + 2 + t] = 0   # tipo min
-                    high[base_index + 2 + t] = 1   # tipo max
+                low[base_index] = 0         # energía min
+                high[base_index] = energy_max  # energía max
+                low[base_index + 1] = 0     # HP min
+                high[base_index + 1] = hp_max  # HP max
+                
+                # Para 3v3, incluir tipos
+                if battle_format == "3v3":
+                    for t in range(num_types):
+                        low[base_index + 2 + t] = 0   # tipo min
+                        high[base_index + 2 + t] = 1   # tipo max
 
-            # Atributos del equipo (después de todos los Pokémon)
-            # Escudos
+            # Atributos del equipo
             remaining_index = team_base + self.num_pokemon * attrs_per_pokemon
-            low[remaining_index] = 0
-            high[remaining_index] = 3
-            # Pokémon restantes
-            shields_index = remaining_index + 1
-            low[shields_index] = 0
-            high[shields_index] = 2
-
             
+            # Escudos
+            low[remaining_index] = 0
+            high[remaining_index] = 2
+            
+            # Para 3v3, incluir pokémon restantes
+            if battle_format == "3v3":
+                shields_index = remaining_index + 1
+                low[shields_index] = 0
+                high[shields_index] = self.num_pokemon
+
         self.observation_space = spaces.Box(
             low=0,
             high=high,
-            shape=(observation_dim,),  # Note the comma to make it a tuple
-            dtype=np.float64
+            shape=(observation_dim,),
+            dtype=dtype
         )
-
 
         # Define action mapping
         self.action_mapping = {
@@ -79,11 +94,14 @@ class PVPokeEnv(gym.Env):
             1: "charged1",
             2: "charged2",
             3: "shield",
-            4: "no_shield",
-            5: "switch1",
-            6: "switch2",
-            7: "wait"
         }
+        
+        if battle_format == "3v3":
+            self.action_mapping.update({
+                4: "no_shield",
+                5: "switch1",
+                6: "switch2",
+            })
 
     async def connect(self):
         """Abre una conexión WebSocket."""
@@ -173,7 +191,6 @@ class PVPokeEnv(gym.Env):
         return one_hot
     
     def state_to_observation(self, state):
-        # Convertir el estado a una observación que se ajuste a la forma definida en observation_space
         observation = []
 
         # Información del equipo aliado
@@ -181,21 +198,50 @@ class PVPokeEnv(gym.Env):
             pokemon = state['teamAlly'].get(f'pokemon{i}', {})
             observation.append(pokemon.get("energy", 0))
             observation.append(pokemon.get("hp", 0))
+            
+            # Para 3v3, incluir tipos
+            if self.battle_format == "3v3":
+                type1 = pokemon.get("type1", "")
+                type2 = pokemon.get("type2", "")
+                observation.extend(self.type_to_one_hot(type1))
+                observation.extend(self.type_to_one_hot(type2))
 
-        
+        # Escudos del aliado
         observation.append(state['teamAlly'].get("shield", 0))
+        
+        # Para 3v3, incluir pokémon restantes
+        if self.battle_format == "3v3":
+            observation.append(state['teamAlly'].get("remaining", 0))
 
         # Información del equipo enemigo
         for i in range(1, self.num_pokemon + 1):
             pokemon = state['teamEnemy'].get(f"pokemon{i}", {})
             observation.append(pokemon.get("energy", 0))
             observation.append(pokemon.get("hp", 0))
+            
+            # Para 3v3, incluir tipos
+            if self.battle_format == "3v3":
+                type1 = pokemon.get("type1", "")
+                type2 = pokemon.get("type2", "")
+                observation.extend(self.type_to_one_hot(type1))
+                observation.extend(self.type_to_one_hot(type2))
 
-        
+        # Escudos del enemigo
         observation.append(state['teamEnemy'].get("shield", 0))
+        
+        # Para 3v3, incluir pokémon restantes
+        if self.battle_format == "3v3":
+            observation.append(state['teamEnemy'].get("remaining", 0))
 
-        # Add phase or additional attributes needed to match observation_space shape
-        obs_array = np.array(observation, dtype=np.float32)
+        # Convertir a array numpy - USE THE SAME DTYPE AS DEFINED IN __init__
+        if self.battle_format == "1v1":
+            dtype = np.int64   # Changed from np.float32 to match observation_space
+        else:
+            dtype = np.float64
+            
+        obs_array = np.array(observation, dtype=dtype)
+        
+        # Verificar que la forma coincida
         assert obs_array.shape[0] == self.observation_space.shape[0], f"Expected shape {self.observation_space.shape}, got {obs_array.shape}"
 
         return obs_array
