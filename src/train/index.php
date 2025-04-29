@@ -220,11 +220,11 @@ require_once '../header.php';
             // Función para Train episode 3
             // Añade la lógica específica para episode 3
 			I_WANT_PAUSE = true;
-			TIEMPO_EJECUCION = 0.5; //5
+			TIEMPO_EJECUCION = 0; //5
 			TIEMPO_EJECUCION_SOCKET = 0;
-			TIEMPO_DE_ESPERA_ANIMACION_ESCUDO =1;//10
-			TIEMPO_DE_ESPERA_EJECUCION_ESCUDO = 2;//20
-			TIEMPO_DE_ESPERA_FINAL_ESCUDO = 3;//30
+			TIEMPO_DE_ESPERA_ANIMACION_ESCUDO =0;//10
+			TIEMPO_DE_ESPERA_EJECUCION_ESCUDO = 0.5;//20
+			TIEMPO_DE_ESPERA_FINAL_ESCUDO = 1;//30
 			TIME_RESET = 4;//15
 			train = true;
 

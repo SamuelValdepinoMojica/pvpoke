@@ -10,3 +10,5 @@ src/articles/article-assets
 /PVPOKE/a2c_pvpoke_tensorboard
 /PVPOKE/experiments
 /PVPOKE/log
+/PVPOKE/optuna_studies
+
