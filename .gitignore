@@ -11,4 +11,5 @@ src/articles/article-assets
 /PVPOKE/experiments
 /PVPOKE/log
 /PVPOKE/optuna_studies
+/PVPOKE/tensorboard_logs
 

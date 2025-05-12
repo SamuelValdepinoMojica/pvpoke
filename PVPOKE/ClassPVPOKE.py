@@ -235,7 +235,7 @@ class PVPokeEnv(gym.Env):
 
         # Convertir a array numpy - USE THE SAME DTYPE AS DEFINED IN __init__
         if self.battle_format == "1v1":
-            dtype = np.int64   # Changed from np.float32 to match observation_space
+            dtype = np.float64   # Changed from np.float32 to match observation_space
         else:
             dtype = np.float64
             

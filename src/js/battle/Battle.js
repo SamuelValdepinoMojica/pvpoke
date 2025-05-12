@@ -123,8 +123,8 @@ class PokemonGameClient {
 			teamAlly[`pokemon${i + 1}`] = {
 				type1: players[0].getTeam()[i].types[0],
 				type2: players[0].getTeam()[i].types[1] || 0,
-				energy: Math.round((players[0].getTeam()[i].energy/100)*5),
-				hp: Math.round((players[0].getTeam()[i].hp/this.hpStart[0][i])*5),
+				energy: players[0].getTeam()[i].energy/100,
+				hp: players[0].getTeam()[i].hp/this.hpStart[0][i],
 			};
 		}
 		teamAlly.remainingPokemon = this.teamAllyRemaining/3;
@@ -136,8 +136,8 @@ class PokemonGameClient {
 			teamEnemy[`pokemon${i + 1}`] = {
 				type1: players[1].getTeam()[i].types[0],
 				type2: players[1].getTeam()[i].types[1] || 0,
-				energy: Math.round((players[1].getTeam()[i].energy/100)*5),
-				hp: Math.round((players[1].getTeam()[i].hp/this.hpStart[1][i])*5),
+				energy: players[1].getTeam()[i].energy/100,
+				hp: players[1].getTeam()[i].hp/this.hpStart[1][i],
 			};
 		}
 		teamEnemy.remainingPokemon = this.teamEnemyRemaining/3;
@@ -163,10 +163,10 @@ class PokemonGameClient {
 		}
 
 
-		reward += (pokemon[0].hp-this.currentHpAlly)/this.hpStart[0][this.currentIndexAlly] - (pokemon[1].hp - this.currentHpEnemy) /this.hpStart[1][this.currentIndexEnemy];
-		
-		this.currentHpAlly = pokemon[0].hp;
-		this.currentHpEnemy = pokemon[1].hp;
+		//reward += (pokemon[0].hp-this.currentHpAlly)/this.hpStart[0][this.currentIndexAlly] - (pokemon[1].hp - this.currentHpEnemy) /this.hpStart[1][this.currentIndexEnemy];
+		//
+		//this.currentHpAlly = pokemon[0].hp;
+		//this.currentHpEnemy = pokemon[1].hp;
 
 		let gameState = {
 			state: {
