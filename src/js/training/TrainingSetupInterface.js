@@ -20,7 +20,7 @@ var reset = false;
 var firstTime = false;
 var lastEnergy = 0;
 var train = false;
-
+var SWITCH_FORCE = 13000;
 //Velocidad de ejecucion
 var TIEMPO_DE_ESPERA_ANIMACION_ESCUDO = 6000;
 var TIEMPO_DE_ESPERA_EJECUCION_ESCUDO = 8000;
@@ -93,6 +93,7 @@ var InterfaceMaster = (function () {
 					TIEMPO_EJECUCION = 500;
 					TIEMPO_EJECUCION_SOCKET = 500;
 					I_WANT_PAUSE = false;
+					SWITCH_FORCE = 13000
 					train = false;
 					console.log("TIEMPO_EJECUCION:", TIEMPO_EJECUCION);
 					startBattle();
@@ -102,9 +103,10 @@ var InterfaceMaster = (function () {
 					TIEMPO_EJECUCION = 0;
 					TIEMPO_EJECUCION_SOCKET	= 0;
 					TIEMPO_DE_ESPERA_ANIMACION_ESCUDO = 0;
-					TIEMPO_DE_ESPERA_EJECUCION_ESCUDO = 2;
-					TIEMPO_DE_ESPERA_FINAL_ESCUDO = 3;
+					TIEMPO_DE_ESPERA_EJECUCION_ESCUDO = 0.5;
+					TIEMPO_DE_ESPERA_FINAL_ESCUDO = 1;
 					TIME_RESET = 4;
+					SWITCH_FORCE = 7;
 					I_WANT_PAUSE = true;
 					train = true;
 					console.log("TIEMPO_EJECUCION:", TIEMPO_EJECUCION);

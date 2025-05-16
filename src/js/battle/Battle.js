@@ -150,9 +150,19 @@ class PokemonGameClient {
 
 			done = true;
 		}
-
 		
 		let reward = 0;
+		//if (ACCIONES == "charged1" && pokemon[0].energy < pokemon[0].chargedMoves[0].energy || ACCIONES == "charged2" && pokemon[0].energy < pokemon[0].chargedMoves[1].energy) {
+		//	reward = -0.1;
+		//} 
+		//else if ((ACCIONES == "shield"|| ACCIONES === "no_shield") && phase != "suspend_charged") {
+		//   reward = -0.1;
+		//}
+		//else if ((ACCIONES === "switch1"||ACCIONES == "switch2" )&& (players[0].getSwitchTimer()>0 || players[0].getRemainingPokemon() < 2) && phase != "suspend_switch" ) {
+		//	reward = -0.1;
+		//}
+		
+		
 		if (this.battleResult == "win") {
 			reward = +1;
 		} else if (this.battleResult == "loss") {
@@ -931,7 +941,8 @@ function Battle(){
 			// Display sixty second marker after 60 seconds have passed
 	
 			if((mode == "simulate")&&(matchupDisplayTime >= 60000)&&(! sixtySecondMarked)){
-				if (!train || phase === "game_over")(new TimelineEvent("switchAvailable", "Switch Available (60 seconds)", 0, time, turns));
+				//if (!train || phase === "game_over")
+					(new TimelineEvent("switchAvailable", "Switch Available (60 seconds)", 0, time, turns));
 				sixtySecondMarked = true;
 			}
 	
@@ -947,7 +958,7 @@ function Battle(){
 				var poke = pokemon[i];
 	
 				if(poke.hp <= 0){
-					if (!train || phase === "game_over")
+					//if (!train || phase === "game_over")
 					timeline.push(new TimelineEvent("faint", "Faint", poke.index, time, turns));
 	
 					var opponentIndex = (i == 0) ? 0 : 1;
@@ -1307,7 +1318,7 @@ function Battle(){
 			// Display sixty second marker after 60 seconds have passed
 	
 			if((mode == "simulate")&&(matchupDisplayTime >= 60000)&&(! sixtySecondMarked)){
-				if (!train || phase === "game_over")
+				//if (!train || phase === "game_over")
 				timeline.push(new TimelineEvent("switchAvailable", "Switch Available (60 seconds)", 0, time, turns));
 				sixtySecondMarked = true;
 			}
@@ -1324,7 +1335,7 @@ function Battle(){
 				var poke = pokemon[i];
 	
 				if(poke.hp <= 0){
-					if (!train || phase === "game_over")
+					//if (!train || phase === "game_over")
 					timeline.push(new TimelineEvent("faint", "Faint", poke.index, time, turns));
 	
 					var opponentIndex = (i == 0) ? 0 : 1;
@@ -1361,7 +1372,7 @@ function Battle(){
 					};
 					
 					if(players[0].getRemainingPokemon() > 1){
-						phaseTimeout = setTimeout(self.forceSwitch,	75);//13000
+						phaseTimeout = setTimeout(self.forceSwitch,	SWITCH_FORCE);//13000
 					} else{
 						self.forceSwitch();
 					}
@@ -1908,7 +1919,7 @@ function Battle(){
 			// Set cooldown
 
 			if((action)&&(action.type == "fast")){
-				if (!train || phase === "game_over")
+				//if (!train || phase === "game_over")
 				timeline.push(new TimelineEvent("tap interaction", "Tap", poke.index, time, turns, [2,0]));
 			}
 
@@ -2368,7 +2379,7 @@ function Battle(){
 		// ELEMENTS OF DP QUEUE: ENERGY, OPPONENT HEALTH, TURNS, OPPONENT SHIELDS, USED MOVES, ATTACK BUFF, CHANCE
 
 		var stateCount = 0;
-		var maxStates = train ? 200 : 500;
+		var maxStates =  500;
 		var DPQueue = [new BattleState(poke.energy, opponent.hp, 0, opponent.shields, [], 0, 1)];
 		var stateList = [];
 		var finalState;
@@ -3241,7 +3252,7 @@ function Battle(){
 				if(roundShieldUsed){
 					displayTime -= chargedMinigameTime;
 				}
-				if (!train || phase === "game_over")
+				//if (!train || phase === "game_over")
 				timeline.push(new TimelineEvent("tap interaction wait", "Wait", poke.index, displayTime, turns, [2,0]));
 				break;
 
@@ -3300,7 +3311,7 @@ function Battle(){
 			// Add tap events for display
 
 			for(var i = 0; i < 8; i++){
-				if (!train || phase === "game_over")
+				//if (!train || phase === "game_over")
 				timeline.push(new TimelineEvent("tap "+move.type, "Swipe", attacker.index, time+(1000*i), turns, [i]));
 			}
 
@@ -3396,7 +3407,7 @@ function Battle(){
 				if(useShield){
 					var damageBlocked = damage-1;
 
-					if (!train || phase === "game_over")
+					//if (!train || phase === "game_over")
 					timeline.push(new TimelineEvent("shield", "Shield", defender.index, time+8500, turns, [damageBlocked]));
 					damage = 1;
 					defender.shields--;
@@ -3657,7 +3668,7 @@ function Battle(){
 		}
 
 		if(! buffApplied){
-			if (!train || phase === "game_over")
+			//if (!train || phase === "game_over")
 			timeline.push(new TimelineEvent(type, move.name, attacker.index, displayTime, turns, [damage, energyValue, percentDamage]));
 		} else{
 			var buffStr = "";
@@ -3676,7 +3687,7 @@ function Battle(){
 				buffStr += move.buffs[1] + " Defense";
 			}
 
-			if (!train || phase === "game_over")
+			//if (!train || phase === "game_over")
 			timeline.push(new TimelineEvent(type, move.name, attacker.index, displayTime, turns, [damage, energyValue, percentDamage, buffStr]));
 		}
 

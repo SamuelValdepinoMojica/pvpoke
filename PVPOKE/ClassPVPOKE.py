@@ -25,16 +25,16 @@ class PVPokeEnv(gym.Env):
         if battle_format == "1v1":
             self.num_pokemon = 1
             self.action_space = spaces.Discrete(4)  # fast, charged1, charged2, shield
-            energy_max = 5
-            hp_max = 5
+            energy_max = 1
+            hp_max = 1
             attrs_per_pokemon = 2  # energy, hp
             attrs_per_team = 1     # shields
-            dtype = np.int64
+            dtype = np.float64
         else:  # 3v3
             self.num_pokemon = 3
             self.action_space = spaces.Discrete(7)  # fast, charged1, charged2, shield, no_shield, switch1, switch2
-            energy_max = 100
-            hp_max = 450
+            energy_max = 1
+            hp_max = 1
             attrs_per_pokemon = 2 + 2 * len(self.pokemon_types)  # energy, hp, types
             attrs_per_team = 2     # shields, remaining pokemon
             dtype = np.float64
@@ -73,7 +73,7 @@ class PVPokeEnv(gym.Env):
             
             # Escudos
             low[remaining_index] = 0
-            high[remaining_index] = 2
+            high[remaining_index] = 1
             
             # Para 3v3, incluir pokémon restantes
             if battle_format == "3v3":
@@ -235,7 +235,7 @@ class PVPokeEnv(gym.Env):
 
         # Convertir a array numpy - USE THE SAME DTYPE AS DEFINED IN __init__
         if self.battle_format == "1v1":
-            dtype = np.float64   # Changed from np.float32 to match observation_space
+            dtype = np.float32   # Changed from np.float32 to match observation_space
         else:
             dtype = np.float64
             
