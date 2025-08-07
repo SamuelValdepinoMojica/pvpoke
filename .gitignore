@@ -12,4 +12,5 @@ src/articles/article-assets
 /PVPOKE/log
 /PVPOKE/optuna_studies
 /PVPOKE/tensorboard_logs
+/PVPOKE/Imagen
 

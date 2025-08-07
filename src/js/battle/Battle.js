@@ -67,7 +67,7 @@ class PokemonGameClient {
                         if (!this.processingMessage && train) {
                             this.processingMessage = true;
                             
-                                globalProcessMainLoop();
+                                //globalProcessMainLoop();
                                 this.processingMessage = false;
                            
                         }
@@ -86,7 +86,7 @@ class PokemonGameClient {
                         this.processingMessage = true;
                         
 						
-                            globalProcessMainLoop();
+                            //globalProcessMainLoop();
                             this.processingMessage = false;
                         
                     }
@@ -109,7 +109,7 @@ class PokemonGameClient {
     async sendGameState(players, pokemon,phase, actor = -1, energy = -1) {
 		
         if (!this.isConnected || this.isWaitingForServer) {
-			//console.log("No conectado o esperando respuesta del servidor", this.isConnected,this.isWaitingForServer,this.battleResult,this.currentIndexAlly,this.currentIndexEnemy);
+			console.log("No conectado o esperando respuesta del servidor", this.isConnected,this.isWaitingForServer,this.battleResult,this.currentIndexAlly,this.currentIndexEnemy);
             return;
         }
 
@@ -125,8 +125,11 @@ class PokemonGameClient {
 				type2: players[0].getTeam()[i].types[1] || 0,
 				energy: players[0].getTeam()[i].energy/100,
 				hp: players[0].getTeam()[i].hp/this.hpStart[0][i],
+				dex: players[0].getTeam()[i].dex
 			};
 		}
+		teamAlly.currentPokemon = this.currentIndexAlly + 1;
+		//console.log("Estado del equipo aliado:", teamAlly.currentPokemon);
 		teamAlly.remainingPokemon = this.teamAllyRemaining/3;
 		teamAlly.shield = players[0].getShields()/2;
 		//teamAlly.currentPokemon = players[0].getCurrentPokemonIndex();
@@ -138,8 +141,11 @@ class PokemonGameClient {
 				type2: players[1].getTeam()[i].types[1] || 0,
 				energy: players[1].getTeam()[i].energy/100,
 				hp: players[1].getTeam()[i].hp/this.hpStart[1][i],
+				dex: players[1].getTeam()[i].dex
 			};
 		}
+		teamEnemy.currentPokemon = this.currentIndexEnemy + 1;
+
 		teamEnemy.remainingPokemon = this.teamEnemyRemaining/3;
 		teamEnemy.shield = players[1].getShields()/2;
 
@@ -153,13 +159,16 @@ class PokemonGameClient {
 		
 		let reward = 0;
 		//if (ACCIONES == "charged1" && pokemon[0].energy < pokemon[0].chargedMoves[0].energy || ACCIONES == "charged2" && pokemon[0].energy < pokemon[0].chargedMoves[1].energy) {
-		//	reward = -0.1;
+		//	console.log("Acción penalizada: ", ACCIONES, "Pokemon 0 energía:", pokemon[0].energy, "Charged Move 1 energía:", pokemon[0].chargedMoves[0].energy, "Charged Move 2 energía:", pokemon[0].chargedMoves[1].energy);
+		//	reward = -0.01;
 		//} 
 		//else if ((ACCIONES == "shield"|| ACCIONES === "no_shield") && phase != "suspend_charged") {
-		//   reward = -0.1;
+		//	console.log("Acción penalizada: ", ACCIONES, "Phase:", phase);
+		//   reward = -0.01;
 		//}
-		//else if ((ACCIONES === "switch1"||ACCIONES == "switch2" )&& (players[0].getSwitchTimer()>0 || players[0].getRemainingPokemon() < 2) && phase != "suspend_switch" ) {
-		//	reward = -0.1;
+		//else if ((((ACCIONES === "switch1"||ACCIONES == "switch2" )&& (players[0].getSwitchTimer() != 60000 || players[0].getRemainingPokemon() < 2 ))|| (ACCIONES == "switch2" && players[0].getRemainingPokemon() < 3)) && (phase != "suspend_switch"||phase != "neutral") ) {
+		//	console.log("players[0].getSwitchTimer():", players[0].getSwitchTimer(), "players[0].getRemainingPokemon():", players[0].getRemainingPokemon());
+		//	reward = -0.01;
 		//}
 		
 		
@@ -177,7 +186,7 @@ class PokemonGameClient {
 		//
 		//this.currentHpAlly = pokemon[0].hp;
 		//this.currentHpEnemy = pokemon[1].hp;
-
+		
 		let gameState = {
 			state: {
 				teamAlly: teamAlly,
@@ -188,6 +197,7 @@ class PokemonGameClient {
 			done: done,
 			
 		};
+		//console.log("Estado del juego enviado:", gameState);
         this.isWaitingForServer = true;
         this.ws.send(JSON.stringify(gameState));
     }
@@ -1501,7 +1511,7 @@ function Battle(){
 
 	
 
-	this.emulate = function(callback){
+	this.emulate = function( callback){
 		function switchPokemon(newIndex) {
 			// Validate switch is possible
 			if (phase != "suspend_switch" && (players[0].getTeam()[newIndex].hp <= 0 || players[0].getSwitchTimer() > 0)) {
@@ -1784,7 +1794,9 @@ function Battle(){
 					   
 					   if(phase != "suspend_charged" )
 						   self.setPause(IS_GAME_PAUSED);
+
 					   SHIELD = true;
+					   self.setPlayerUseShield(SHIELD);
 					   break;
 	
 				   case "no_shield":
@@ -1792,6 +1804,7 @@ function Battle(){
 					   if(phase != "suspend_charged" )
 						   self.setPause(IS_GAME_PAUSED);	
 					   SHIELD = false;
+					   self.setPlayerUseShield(SHIELD);
 	
 					   break;
 				   case "continue":
@@ -1800,6 +1813,11 @@ function Battle(){
 					   
 					   break;
 				   //caso cuando es un numero entre 0 y 1
+				   case "reset":
+					   IS_GAME_PAUSED=false;
+					    window.replayBattleClick();
+                        MAKE_ACTION = false;
+                        this.isWaitingForServer = false;
 				   
 				   default:
 						break;
@@ -3206,7 +3224,7 @@ function Battle(){
 							}
 							else {
 									
-								self.setPlayerUseShield(SHIELD);
+								//self.setPlayerUseShield(SHIELD);
 							}
 
 							self.useMove(poke, opponent, move, playerUseShield, action.settings.buffs);

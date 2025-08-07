@@ -35,54 +35,67 @@ class PVPokeEnv(gym.Env):
             self.action_space = spaces.Discrete(7)  # fast, charged1, charged2, shield, no_shield, switch1, switch2
             energy_max = 1
             hp_max = 1
-            attrs_per_pokemon = 2 + 2 * len(self.pokemon_types)  # energy, hp, types
-            attrs_per_team = 2     # shields, remaining pokemon
+            dex_max = 1
+            current_pokemon_max = 1  # 1, 2, or 3
+
+            attrs_per_pokemon = 3 + 2 * len(self.pokemon_types)  # energy, hp, types,dex
+            attrs_per_team = 5    # shields, remaining pokemon
             dtype = np.float64
 
         # Define observation space
         num_teams = 2  # ally and enemy.
         dim_types = len(self.pokemon_types)  # 18 types
         num_types = 2 * dim_types  # type1 and type2 per pokemon
+        one_hot_current_pokemon = 3
 
-        observation_dim = num_teams * (self.num_pokemon * attrs_per_pokemon + attrs_per_team)
-        
+        observation_dim = (
+            num_teams * (
+                self.num_pokemon * attrs_per_pokemon
+                + attrs_per_team
+
+            )
+        )
+
         # Define low and high for each attribute
         low = np.zeros(observation_dim)
         high = np.zeros(observation_dim)
         
         # Configure observation space based on battle format
+        idx = 0
         for team in range(num_teams):
-            team_base = team * (self.num_pokemon * attrs_per_pokemon + attrs_per_team)
-
-            # Para cada Pokémon del equipo
+            # Por cada Pokémon
             for p in range(self.num_pokemon):
-                base_index = team_base + p * attrs_per_pokemon
-                low[base_index] = 0         # energía min
-                high[base_index] = energy_max  # energía max
-                low[base_index + 1] = 0     # HP min
-                high[base_index + 1] = hp_max  # HP max
-                
-                # Para 3v3, incluir tipos
+                low[idx] = 0         # energía min
+                high[idx] = energy_max  # energía max
+                idx += 1
+                low[idx] = 0     # HP min
+                high[idx] = hp_max  # HP max
+                idx += 1
                 if battle_format == "3v3":
+                    low[idx] = 0     # dex min
+                    high[idx] = dex_max  # dex max
+                    idx += 1
                     for t in range(num_types):
-                        low[base_index + 2 + t] = 0   # tipo min
-                        high[base_index + 2 + t] = 1   # tipo max
-
-            # Atributos del equipo
-            remaining_index = team_base + self.num_pokemon * attrs_per_pokemon
-            
+                        low[idx] = 0
+                        high[idx] = 1
+                        idx += 1
             # Escudos
-            low[remaining_index] = 0
-            high[remaining_index] = 1
-            
-            # Para 3v3, incluir pokémon restantes
+            low[idx] = 0
+            high[idx] = 1
+            idx += 1
             if battle_format == "3v3":
-                shields_index = remaining_index + 1
-                low[shields_index] = 0
-                high[shields_index] = self.num_pokemon
+                # currentPokemon one-hot
+                for _ in range(one_hot_current_pokemon):
+                    low[idx] = 0
+                    high[idx] = 1
+                    idx += 1
+                # remainingPokemon
+                low[idx] = 0
+                high[idx] = self.num_pokemon
+                idx += 1
 
         self.observation_space = spaces.Box(
-            low=0,
+            low=low,
             high=high,
             shape=(observation_dim,),
             dtype=dtype
@@ -139,14 +152,10 @@ class PVPokeEnv(gym.Env):
         return observation ,info
     
     async def step_async(self, action):
-        """Realiza una acción en el entorno y devuelve el nuevo estado, recompensa, indicador de fin de episodio e información adicional."""
+        """Realiza una acción en el entorno y devuelve el nuevo estado, recompensa, indicadores de finalización e información adicional."""
         if not self.websocket:
             raise ValueError("WebSocket is not connected. Call `connect()` first.")
         
-        # if action not in self.action_mapping:
-        #     raise ValueError(f"Invalid action: {action}. Expected one of {list(self.action_mapping.keys())}")
-        # # Mapear la acción numérica a su representación en cadena
-        # action_str = self.action_mapping[action]
         await self.websocket.send(str(action))
         
         response = await self.websocket.recv()
@@ -154,13 +163,14 @@ class PVPokeEnv(gym.Env):
         
         state = response_data.get('state')
         reward = response_data.get("reward", 0)
-        done = response_data.get("done", False)
         terminated = response_data.get("done", False)
+        truncated = response_data.get("truncated", False)  # Añadir truncated (o usar False por defecto)
         info = response_data.get("info", {})  # Información adicional
         
         observation = self.state_to_observation(state)
+        #print(f"Step response: {observation}, Reward: {reward}, Terminated: {terminated}, Truncated: {truncated}, Info: {info}")
         
-        return observation, reward, done, terminated, info
+        return observation, reward, terminated, truncated, info
 
     def step(self, action):
         """Sincroniza el método step con Gym."""
@@ -190,6 +200,13 @@ class PVPokeEnv(gym.Env):
             one_hot[index] = 1
         return one_hot
     
+    def index_to_one_hot(self, idx, size):
+        """Convierte un índice (1-based) a one-hot de tamaño `size`."""
+        one_hot = [0] * size
+        if 1 <= idx <= size:
+            one_hot[idx - 1] = 1
+        return one_hot
+
     def state_to_observation(self, state):
         observation = []
 
@@ -201,6 +218,10 @@ class PVPokeEnv(gym.Env):
             
             # Para 3v3, incluir tipos
             if self.battle_format == "3v3":
+                # Normaliza el número de dex
+                dex = pokemon.get("dex", 0)
+                
+                observation.append(dex)
                 type1 = pokemon.get("type1", "")
                 type2 = pokemon.get("type2", "")
                 observation.extend(self.type_to_one_hot(type1))
@@ -209,9 +230,11 @@ class PVPokeEnv(gym.Env):
         # Escudos del aliado
         observation.append(state['teamAlly'].get("shield", 0))
         
-        # Para 3v3, incluir pokémon restantes
+        # Para 3v3, incluir pokémon restantes y currentPokemon como one-hot
         if self.battle_format == "3v3":
-            observation.append(state['teamAlly'].get("remaining", 0))
+            current_idx = state['teamAlly'].get("currentPokemon", 0)
+            observation.extend(self.index_to_one_hot(current_idx, self.num_pokemon))
+            observation.append(state['teamAlly'].get("remainingPokemon", 0))
 
         # Información del equipo enemigo
         for i in range(1, self.num_pokemon + 1):
@@ -221,6 +244,9 @@ class PVPokeEnv(gym.Env):
             
             # Para 3v3, incluir tipos
             if self.battle_format == "3v3":
+                dex = pokemon.get("dex", 0)
+                
+                observation.append(dex)
                 type1 = pokemon.get("type1", "")
                 type2 = pokemon.get("type2", "")
                 observation.extend(self.type_to_one_hot(type1))
@@ -229,19 +255,18 @@ class PVPokeEnv(gym.Env):
         # Escudos del enemigo
         observation.append(state['teamEnemy'].get("shield", 0))
         
-        # Para 3v3, incluir pokémon restantes
+        # Para 3v3, incluir pokémon restantes y currentPokemon como one-hot
         if self.battle_format == "3v3":
-            observation.append(state['teamEnemy'].get("remaining", 0))
+            current_idx = state['teamEnemy'].get("currentPokemon", 0)
+            observation.extend(self.index_to_one_hot(current_idx, self.num_pokemon))
+            observation.append(state['teamEnemy'].get("remainingPokemon", 0))
 
+
+        #print(f"Observation: {observation}")
+        #print(self.index_to_one_hot(current_idx, self.num_pokemon))
         # Convertir a array numpy - USE THE SAME DTYPE AS DEFINED IN __init__
-        if self.battle_format == "1v1":
-            dtype = np.float32   # Changed from np.float32 to match observation_space
-        else:
-            dtype = np.float64
-            
+        dtype = np.float64 if self.battle_format == "3v3" else np.float64
         obs_array = np.array(observation, dtype=dtype)
-        
-        # Verificar que la forma coincida
         assert obs_array.shape[0] == self.observation_space.shape[0], f"Expected shape {self.observation_space.shape}, got {obs_array.shape}"
 
         return obs_array

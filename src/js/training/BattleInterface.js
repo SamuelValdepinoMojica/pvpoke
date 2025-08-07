@@ -18,7 +18,7 @@ var BattlerMaster = (function () {
 			var gm = GameMaster.getInstance();
 			var battle;
 			var players;
-			var phase;
+			var phase; 
 			var activePokemon = []; // The currently active Pokemon
 
 			var multiSelectors = [];
@@ -104,9 +104,7 @@ var BattlerMaster = (function () {
 						ACCIONES = "switch2";
 						MAKE_ACTION = true;
 					})
-					$("#Peticion").on("click", function(){
-						peticion = !peticion;
-					})
+
 					$("#Reset").on("click", function(){
 						ACCIONES = "reset";
 
@@ -1202,11 +1200,36 @@ var BattlerMaster = (function () {
 				
 				// Manually set the previous team
 				if(properties.mode == "single"){
-					properties.teamSelectMethod = "manual";
-					properties.teams[1] = players[1].getTeam();
-					handler.initBattle(properties);
-					//IS_GAME_PAUSED = true;
-					peticion = true;
+					properties.teamSelectMethod = "random";
+					properties.partySize = 3;
+					
+					// Crear una nueva batalla temporalmente
+					var tempBattle = new Battle();
+					tempBattle.setCP(properties.league);
+					tempBattle.setCup(properties.cup);
+					
+					// Crear jugador temporal con IA para generar equipo aliado
+					var tempPlayer1 = new Player(0, properties.difficulty, tempBattle);
+					var tempPlayer2 = new Player(1, properties.difficulty, tempBattle);
+					
+					//console.log("Generando nuevos equipos aleatorios para ambos jugadores...");
+					
+					// Generar equipo para jugador 1 (aliado)
+					tempPlayer1.getAI().generateRoster(properties.partySize, function(team1) {
+						//console.log("Nuevo equipo aliado:", team1.map(p => p.speciesName));
+						
+						// Generar equipo para jugador 2 (enemigo)
+						tempPlayer2.getAI().generateRoster(properties.partySize, function(team2) {
+							//console.log("Nuevo equipo rival:", team2.map(p => p.speciesName));
+							
+							// Actualizar equipos en las propiedades
+							properties.teams = [team1, team2];
+							
+							// Iniciar nueva batalla con los equipos generados
+							handler.initBattle(properties);
+						});
+					});
+					
 				} else if(properties.mode == "tournament"){
 					handler.startTournamentBattle(players[0].getTeam(), properties, players[1].getTeam());
 				}
