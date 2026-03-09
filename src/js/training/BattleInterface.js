@@ -110,6 +110,10 @@ var BattlerMaster = (function () {
 
 						MAKE_ACTION = true;
 					})
+					$("#ResetRandom").on("click", function(){
+						ACCIONES = "reset_random";
+						MAKE_ACTION = true;
+					})
 					listenersInitialized = true;
 				}
 
@@ -1191,46 +1195,29 @@ var BattlerMaster = (function () {
 
 			// At the end of a 3v3 match, replay the same battle
 
-			function replayBattleClick(e){
+			function replayBattleClick(e,random = false){
 				// Stop the current battle
 				IS_GAME_PAUSED = false;
 				peticion = false;
 				battle.stop();
 				//console.log("Replay battle click",phase);
+				 
+				if(properties.mode == "single" && !random){
+					
+					properties.teamSelectMethod = "manual";
+					properties.teams[1] = players[1].getTeam();
+					handler.initBattle(properties);
+					//IS_GAME_PAUSED = true;
+					peticion = true;
+				}
+				else if(properties.mode == "single" && random){
+					properties.teamSelectMethod = "bothRandom";
+					handler.initBattle(properties);
+				}
+
+					
 				
-				// Manually set the previous team
-				if(properties.mode == "single"){
-					properties.teamSelectMethod = "random";
-					properties.partySize = 3;
-					
-					// Crear una nueva batalla temporalmente
-					var tempBattle = new Battle();
-					tempBattle.setCP(properties.league);
-					tempBattle.setCup(properties.cup);
-					
-					// Crear jugador temporal con IA para generar equipo aliado
-					var tempPlayer1 = new Player(0, properties.difficulty, tempBattle);
-					var tempPlayer2 = new Player(1, properties.difficulty, tempBattle);
-					
-					//console.log("Generando nuevos equipos aleatorios para ambos jugadores...");
-					
-					// Generar equipo para jugador 1 (aliado)
-					tempPlayer1.getAI().generateRoster(properties.partySize, function(team1) {
-						//console.log("Nuevo equipo aliado:", team1.map(p => p.speciesName));
-						
-						// Generar equipo para jugador 2 (enemigo)
-						tempPlayer2.getAI().generateRoster(properties.partySize, function(team2) {
-							//console.log("Nuevo equipo rival:", team2.map(p => p.speciesName));
-							
-							// Actualizar equipos en las propiedades
-							properties.teams = [team1, team2];
-							
-							// Iniciar nueva batalla con los equipos generados
-							handler.initBattle(properties);
-						});
-					});
-					
-				} else if(properties.mode == "tournament"){
+				else if(properties.mode == "tournament"){
 					handler.startTournamentBattle(players[0].getTeam(), properties, players[1].getTeam());
 				}
 

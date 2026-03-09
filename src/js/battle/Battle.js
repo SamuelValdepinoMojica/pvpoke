@@ -51,7 +51,7 @@ class PokemonGameClient {
                     const message = response.message;
                     this.currentAction = message;
                     
-                    if (response.message == "reset") {
+                    if (response.message == "reset" || response.message == "reset_random") {
                         window.replayBattleClick();
                         MAKE_ACTION = false;
                         this.isWaitingForServer = false;
@@ -1818,7 +1818,11 @@ function Battle(){
 					    window.replayBattleClick();
                         MAKE_ACTION = false;
                         this.isWaitingForServer = false;
-				   
+						break;
+				   case "reset_random":
+					   IS_GAME_PAUSED=false;
+					    window.replayBattleClick(undefined, true); ;
+						
 				   default:
 						break;
 		   }

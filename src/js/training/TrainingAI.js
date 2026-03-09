@@ -122,6 +122,11 @@ function TrainingAI(l, p, b){
 		if((teamSelectMode == "preset")&&(partySize == 3)){
 			rosterSize = 3;
 		}
+		if(partySize == 1){
+			rosterSize = 1;
+		}
+		
+
 
 		for(var i = 0; i < rosterSize; i++){
 			var index = Math.floor(Math.random() * slotBucket.length);

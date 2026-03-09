@@ -8,11 +8,12 @@ import nest_asyncio
 nest_asyncio.apply()
 
 class PVPokeEnv(gym.Env):
-    def __init__(self, uri, client_id, target_client_id, battle_format="3v3"):
+    def __init__(self, uri, client_id, target_client_id, battle_format="3v3", reset_random = False):
         super(PVPokeEnv, self).__init__()
         self.uri = f"{uri}/{client_id}/{target_client_id}"
         self.websocket = None
         self.battle_format = battle_format
+        self.reset_random = reset_random
         
         self.loop = asyncio.get_event_loop()
         self.current_state = None
@@ -126,8 +127,10 @@ class PVPokeEnv(gym.Env):
         
         if not self.websocket:
             raise ValueError("WebSocket is not connected. Call `connect()` first.")
-        
-        reset_message = "reset"
+        if (self.reset_random):
+            reset_message = "reset_random"
+        else:
+            reset_message = "reset"
         #print(f"Sending message: {reset_message}")
         await self.websocket.send(reset_message)
         response = await self.websocket.recv()

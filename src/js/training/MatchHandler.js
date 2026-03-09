@@ -52,6 +52,25 @@ function MatchHandler(){
 			self.startBattle();
 		} else if(props.teamSelectMethod == "random"){
 			opponent.generateRoster(props.partySize, self.rosterReady);
+		} else if (props.teamSelectMethod == "bothRandom"){
+			props.teamSelectMethod =  "manual";
+			
+
+			var tempPlayer1 = new Player(0, properties.difficulty, battle);
+			
+
+			// Generar equipo para jugador 1 (aliado)
+			tempPlayer1.getAI().generateRoster(properties.partySize, function(team1) {
+				// Generar equipo para jugador 2 (enemigo)
+				opponent.getAI().generateRoster(properties.partySize, function(team2) {
+					// Actualizar equipos en las propiedades
+					properties.teams = [team1, team2]; // ✅ PERFECTO
+					
+					// Iniciar nueva batalla con los equipos generados
+					self.rosterReady();
+				});
+			});
+
 		} else if(props.teamSelectMethod == "featured"){
 			opponent.setRoster(props.teams[1]);
 			self.rosterReady();
