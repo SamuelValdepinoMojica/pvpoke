@@ -8,12 +8,16 @@ import nest_asyncio
 nest_asyncio.apply()
 
 class PVPokeEnv(gym.Env):
-    def __init__(self, uri, client_id, target_client_id, battle_format="3v3", reset_random = False):
+    def __init__(self, uri, client_id, target_client_id, battle_format="3v3", reset_random = False, observation_mode="full"):
         super(PVPokeEnv, self).__init__()
         self.uri = f"{uri}/{client_id}/{target_client_id}"
         self.websocket = None
         self.battle_format = battle_format
         self.reset_random = reset_random
+        self.observation_mode = observation_mode
+
+        if self.observation_mode not in ("full", "minimal"):
+            raise ValueError("observation_mode must be either 'full' or 'minimal'")
         
         self.loop = asyncio.get_event_loop()
         self.current_state = None
@@ -52,77 +56,83 @@ class PVPokeEnv(gym.Env):
             attrs_per_team = 5    # shields, remaining pokemon
             dtype = np.float32
 
-        # Define observation space
-        num_teams = 2  # ally and enemy.
-        dim_types = len(self.pokemon_types)  # 18 types
-        num_types = 2 * dim_types  # type1 and type2 per pokemon
-        one_hot_current_pokemon = 3
+        if self.observation_mode == "minimal":
+            # Minimal: for each team -> (energy, hp) per pokemon + shields.
+            observation_dim = (2 * self.num_pokemon + 1) * 2
+            low = np.zeros(observation_dim, dtype=np.float32)
+            high = np.ones(observation_dim, dtype=np.float32)
+        else:
+            # Define observation space
+            num_teams = 2  # ally and enemy.
+            dim_types = len(self.pokemon_types)  # 18 types
+            num_types = 2 * dim_types  # type1 and type2 per pokemon
+            one_hot_current_pokemon = 3
 
-        observation_dim = (
-            self.num_pokemon * self.ally_attrs_per_pokemon + attrs_per_team
-            + self.num_pokemon * self.enemy_attrs_per_pokemon + attrs_per_team
-        )
+            observation_dim = (
+                self.num_pokemon * self.ally_attrs_per_pokemon + attrs_per_team
+                + self.num_pokemon * self.enemy_attrs_per_pokemon + attrs_per_team
+            )
 
-        # Define low and high for each attribute
-        low = np.zeros(observation_dim)
-        high = np.zeros(observation_dim)
-        
-        # Configure observation space based on battle format
-        idx = 0
-        for team in range(num_teams):
-            is_enemy = (team == 1)
-            # Por cada Pokémon
-            for p in range(self.num_pokemon):
-                low[idx] = 0         # energía min
-                high[idx] = energy_max  # energía max
-                idx += 1
-                low[idx] = 0     # HP min
-                high[idx] = hp_max  # HP max
-                idx += 1
-                # dex y tipos para ambos formatos
-                low[idx] = 0     # dex min
-                high[idx] = dex_max  # dex max
-                idx += 1
-                for t in range(num_types):
-                    low[idx] = 0
-                    high[idx] = 1
+            # Define low and high for each attribute
+            low = np.zeros(observation_dim)
+            high = np.zeros(observation_dim)
+            
+            # Configure observation space based on battle format
+            idx = 0
+            for team in range(num_teams):
+                is_enemy = (team == 1)
+                # Por cada Pokémon
+                for p in range(self.num_pokemon):
+                    low[idx] = 0         # energía min
+                    high[idx] = energy_max  # energía max
                     idx += 1
-                if is_enemy:
-                    # Enemy fast move: type one-hot(18) + cooldown
-                    for t in range(dim_types):
-                        low[idx] = 0; high[idx] = 1; idx += 1
-                    low[idx] = 0; high[idx] = 1; idx += 1  # cooldown
-                    # Enemy charged moves: type one-hot(18) only
-                    for cm in range(2):
+                    low[idx] = 0     # HP min
+                    high[idx] = hp_max  # HP max
+                    idx += 1
+                    # dex y tipos para ambos formatos
+                    low[idx] = 0     # dex min
+                    high[idx] = dex_max  # dex max
+                    idx += 1
+                    for t in range(num_types):
+                        low[idx] = 0
+                        high[idx] = 1
+                        idx += 1
+                    if is_enemy:
+                        # Enemy fast move: type one-hot(18) + cooldown
                         for t in range(dim_types):
                             low[idx] = 0; high[idx] = 1; idx += 1
-                else:
-                    # Ally fast move: type one-hot(18) + power + energyGain + cooldown
-                    for t in range(dim_types):
-                        low[idx] = 0; high[idx] = 1; idx += 1
-                    low[idx] = 0; high[idx] = 1; idx += 1  # power
-                    low[idx] = 0; high[idx] = 1; idx += 1  # energyGain
-                    low[idx] = 0; high[idx] = 1; idx += 1  # cooldown
-                    # Ally charged moves: type one-hot(18) + power + energy cost
-                    for cm in range(2):
+                        low[idx] = 0; high[idx] = 1; idx += 1  # cooldown
+                        # Enemy charged moves: type one-hot(18) only
+                        for cm in range(2):
+                            for t in range(dim_types):
+                                low[idx] = 0; high[idx] = 1; idx += 1
+                    else:
+                        # Ally fast move: type one-hot(18) + power + energyGain + cooldown
                         for t in range(dim_types):
                             low[idx] = 0; high[idx] = 1; idx += 1
                         low[idx] = 0; high[idx] = 1; idx += 1  # power
-                        low[idx] = 0; high[idx] = 1; idx += 1  # energy cost
-            # Escudos
-            low[idx] = 0
-            high[idx] = 1
-            idx += 1
-            if battle_format == "3v3":
-                # currentPokemon one-hot
-                for _ in range(one_hot_current_pokemon):
-                    low[idx] = 0
-                    high[idx] = 1
-                    idx += 1
-                # remainingPokemon
+                        low[idx] = 0; high[idx] = 1; idx += 1  # energyGain
+                        low[idx] = 0; high[idx] = 1; idx += 1  # cooldown
+                        # Ally charged moves: type one-hot(18) + power + energy cost
+                        for cm in range(2):
+                            for t in range(dim_types):
+                                low[idx] = 0; high[idx] = 1; idx += 1
+                            low[idx] = 0; high[idx] = 1; idx += 1  # power
+                            low[idx] = 0; high[idx] = 1; idx += 1  # energy cost
+                # Escudos
                 low[idx] = 0
-                high[idx] = self.num_pokemon
+                high[idx] = 1
                 idx += 1
+                if battle_format == "3v3":
+                    # currentPokemon one-hot
+                    for _ in range(one_hot_current_pokemon):
+                        low[idx] = 0
+                        high[idx] = 1
+                        idx += 1
+                    # remainingPokemon
+                    low[idx] = 0
+                    high[idx] = self.num_pokemon
+                    idx += 1
 
         self.observation_space = spaces.Box(
             low=low,
@@ -278,6 +288,27 @@ class PVPokeEnv(gym.Env):
         return obs
 
     def state_to_observation(self, state):
+        if self.observation_mode == "minimal":
+            observation = []
+
+            # Ally: energy + hp for each pokemon, then shields.
+            for i in range(1, self.num_pokemon + 1):
+                pokemon = state['teamAlly'].get(f'pokemon{i}', {})
+                observation.append(pokemon.get("energy", 0))
+                observation.append(pokemon.get("hp", 0))
+            observation.append(state['teamAlly'].get("shield", 0))
+
+            # Enemy: energy + hp for each pokemon, then shields.
+            for i in range(1, self.num_pokemon + 1):
+                pokemon = state['teamEnemy'].get(f'pokemon{i}', {})
+                observation.append(pokemon.get("energy", 0))
+                observation.append(pokemon.get("hp", 0))
+            observation.append(state['teamEnemy'].get("shield", 0))
+
+            obs_array = np.array(observation, dtype=np.float32)
+            assert obs_array.shape[0] == self.observation_space.shape[0], f"Expected shape {self.observation_space.shape}, got {obs_array.shape}"
+            return obs_array
+
         observation = []
 
         # Información del equipo aliado
