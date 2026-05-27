@@ -118,7 +118,7 @@ class PokemonGameClient {
 		
 		let teamAlly = {};
 		let teamEnemy = {};
-		
+
 		// Construir el estado del equipo aliado
 		for (let i = 0; i < players[0].getTeam().length; i++) {
 			let allyPoke = players[0].getTeam()[i];
@@ -299,6 +299,22 @@ class PokemonGameClient {
 				teamAlly: teamAlly,
 				teamEnemy: teamEnemy,
 
+			},
+			meta: {
+				battleFormat: teamSize === 1 ? "1v1" : "3v3",
+				phase: phase,
+				actor: actor,
+				normalization: {
+					energyDiv: 100,
+					hpDivByStart: true,
+					fastPowerDiv: 20,
+					fastEnergyGainDiv: 20,
+					fastCooldownDiv: 4000,
+					chargedPowerDiv: 200,
+					chargedEnergyDiv: 100,
+					shieldDiv: 2,
+					remainingPokemonDivByTeam: true
+				}
 			},
 			reward: reward,
 			done: done,
