@@ -6,24 +6,6 @@ from typing import Optional, Dict
 import asyncio
 import json
 
-
-class Pokemon(BaseModel):
-    name: str
-    energy: int
-    hp: int
-class Team(BaseModel):
-    pokemon1: Pokemon
-    pokemon2: Pokemon
-    pokemon3: Pokemon
-    shield: int
-class GameState(BaseModel):
-    teamAlly: Team = None
-    teamEnemy: Team = None
-    reques: Optional[str] = None
-
-
-
-game_manager = GameState()
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,

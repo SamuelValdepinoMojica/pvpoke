@@ -14,3 +14,10 @@ src/articles/article-assets
 /PVPOKE/tensorboard_logs
 /PVPOKE/Imagen
 
+/PVPOKE/plots
+/PVPOKE/ppo_pvpoke_final
+/PVPOKE/ppo_pvpoke_tensorboard
+/PVPOKE/qlearning_experiments
+/PVPOKE/__pycache__
+PVPOKE/outputs/qlearning
+PVPOKE/experiment

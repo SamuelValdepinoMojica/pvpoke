@@ -14,10 +14,14 @@ class PokemonGameClient {
         this.ws = null;
         this.isConnected = false;
         this.isWaitingForServer = false;
-		// Allow dynamic IDs via URL params (?client_id=...&target_id=...)
+		// Allow dynamic IDs via URL params (?pair_id=0 or ?client_id=...&target_id=...)
 		const params = new URLSearchParams(window.location.search);
-		this.client_id = params.get("client_id") || "pvpoke";
-		this.target_id = params.get("target_id") || "notebook";
+		const pairIdParam = params.get("pair_id");
+		const pairId = (pairIdParam !== null && pairIdParam !== "") ? pairIdParam : "0";
+		const defaultClientId = `pvpoke_${pairId}`;
+		const defaultTargetId = `rl_${pairId}`;
+		this.client_id = params.get("client_id") || defaultClientId;
+		this.target_id = params.get("target_id") || defaultTargetId;
 		this.currentAction = "";
 		this.currentIndexAlly = 0;
 		this.currentIndexEnemy = 0;
@@ -124,28 +128,30 @@ class PokemonGameClient {
 			let allyPoke = players[0].getTeam()[i];
 			let allyFast = allyPoke.fastMove || {};
 			let allyCharged = allyPoke.chargedMoves || [];
+			let allyHpMax = this.hpStart[0][i] || 1;
 			teamAlly[`pokemon${i + 1}`] = {
 				type1: allyPoke.types[0],
 				type2: allyPoke.types[1] || 0,
-				energy: allyPoke.energy/100,
-				hp: allyPoke.hp/this.hpStart[0][i],
+				energy: allyPoke.energy,
+				hp: allyPoke.hp,
+				hpMax: allyHpMax,
 				dex: allyPoke.dex,
 				fastMove: {
 					type: allyFast.type || "",
-					power: (allyFast.power || 0) / 20,
-					energyGain: (allyFast.energyGain || 0) / 20,
-					cooldown: (allyFast.cooldown || 0) / 4000
+					power: (allyFast.power || 0),
+					energyGain: (allyFast.energyGain || 0),
+					cooldown: (allyFast.cooldown || 0)
 				},
 				chargedMoves: [
-					allyCharged.length >= 1 ? { type: allyCharged[0].type, power: allyCharged[0].power / 200, energy: allyCharged[0].energy / 100 } : { type: "", power: 0, energy: 0 },
-					allyCharged.length >= 2 ? { type: allyCharged[1].type, power: allyCharged[1].power / 200, energy: allyCharged[1].energy / 100 } : { type: "", power: 0, energy: 0 }
+					allyCharged.length >= 1 ? { type: allyCharged[0].type, power: allyCharged[0].power, energy: allyCharged[0].energy } : { type: "", power: 0, energy: 0 },
+					allyCharged.length >= 2 ? { type: allyCharged[1].type, power: allyCharged[1].power, energy: allyCharged[1].energy } : { type: "", power: 0, energy: 0 }
 				]
 			};
 		}
 		teamAlly.currentPokemon = this.currentIndexAlly + 1;
 		//console.log("Estado del equipo aliado:", teamAlly.currentPokemon);
-		teamAlly.remainingPokemon = this.teamAllyRemaining/players[0].getTeam().length;
-		teamAlly.shield = players[0].getShields()/2;
+		teamAlly.remainingPokemon = this.teamAllyRemaining;
+		teamAlly.shield = players[0].getShields();
 		//teamAlly.currentPokemon = players[0].getCurrentPokemonIndex();
 		
 		// Construir el estado del equipo enemigo (con fog of war)
@@ -154,9 +160,10 @@ class PokemonGameClient {
 			let revealed = this.revealedEnemyMoves[i] || { fast: false, charged: [false, false] };
 			let enemyFast = enemyPoke.fastMove || {};
 			let enemyCharged = enemyPoke.chargedMoves || [];
+			let enemyHpMax = this.hpStart[1][i] || 1;
 
 			let fastData = revealed.fast
-				? { type: enemyFast.type || "", cooldown: (enemyFast.cooldown || 0) / 4000 }
+				? { type: enemyFast.type || "", cooldown: (enemyFast.cooldown || 0) }
 				: { type: "", cooldown: 0 };
 
 			let chargedData = [];
@@ -171,8 +178,9 @@ class PokemonGameClient {
 			teamEnemy[`pokemon${i + 1}`] = {
 				type1: enemyPoke.types[0],
 				type2: enemyPoke.types[1] || 0,
-				energy: enemyPoke.energy/100,
-				hp: enemyPoke.hp/this.hpStart[1][i],
+				energy: enemyPoke.energy,
+				hp: enemyPoke.hp,
+				hpMax: enemyHpMax,
 				dex: enemyPoke.dex,
 				fastMove: fastData,
 				chargedMoves: chargedData
@@ -180,8 +188,8 @@ class PokemonGameClient {
 		}
 		teamEnemy.currentPokemon = this.currentIndexEnemy + 1;
 
-		teamEnemy.remainingPokemon = this.teamEnemyRemaining/players[1].getTeam().length;
-		teamEnemy.shield = players[1].getShields()/2;
+		teamEnemy.remainingPokemon = this.teamEnemyRemaining;
+		teamEnemy.shield = players[1].getShields();
 
 		let done = false;
 		// DONE si todos los pokemon en el equipo enemigo o aliado están desmayados
@@ -305,6 +313,7 @@ class PokemonGameClient {
 				phase: phase,
 				actor: actor,
 				normalization: {
+					dexDiv: 1025,
 					energyDiv: 100,
 					hpDivByStart: true,
 					fastPowerDiv: 20,
@@ -1957,7 +1966,7 @@ function Battle(){
 						   pokemon[0].cooldown = 0;
 						   gameClient.teamAllyRemaining = players[0].getRemainingPokemon();
 						   gameClient.teamEnemyRemaining = players[1].getRemainingPokemon();
-						   gameClient.sendGameState(players, pokemon, phase, energy = lastEnergy);
+						   gameClient.sendGameState(players, pokemon, phase, -1, lastEnergy);
 					   }
 					   break;
 	
@@ -1983,7 +1992,7 @@ function Battle(){
 						   pokemon[0].cooldown = 0;
 						   gameClient.teamAllyRemaining = players[0].getRemainingPokemon();
 						   gameClient.teamEnemyRemaining = players[1].getRemainingPokemon();
-						   gameClient.sendGameState(players, pokemon, phase, energy = lastEnergy);
+						   gameClient.sendGameState(players, pokemon, phase, -1, lastEnergy);
 					   }
 	
 					   break;
@@ -3435,7 +3444,7 @@ function Battle(){
 								pokemon[0].cooldown = 0;
 								gameClient.teamAllyRemaining = players[0].getRemainingPokemon();
 								gameClient.teamEnemyRemaining = players[1].getRemainingPokemon();
-								gameClient.sendGameState(players,pokemon,phase, energy = lastEnergy);
+								gameClient.sendGameState(players, pokemon, phase, -1, lastEnergy);
 							}, TIEMPO_DE_ESPERA_FINAL_ESCUDO);
 						}
 						ACTOR = -1;
