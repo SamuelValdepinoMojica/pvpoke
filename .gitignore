@@ -21,3 +21,5 @@ src/articles/article-assets
 /PVPOKE/__pycache__
 PVPOKE/outputs/qlearning
 PVPOKE/experiment
+
+/PVPOKE/Prueba.ipynb

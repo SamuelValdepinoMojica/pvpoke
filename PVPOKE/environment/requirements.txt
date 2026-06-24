@@ -1,0 +1,8 @@
+gymnasium
+torch
+stable-baselines3[extra]
+sb3-contrib
+websockets
+numpy
+jupyter
+nest_asyncio

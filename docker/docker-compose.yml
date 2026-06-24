@@ -1,12 +1,71 @@
+# ==============================================================================
+# PvPoke RL Environment - Docker Compose Architecture
+# ==============================================================================
+# Orchestrates the simulation environment and the AI bridge server.
+# 
+# Usage:
+#   Development: docker-compose up
+#   Background:  docker-compose up -d
+#   Rebuild:     docker-compose up --build
+# ==============================================================================
+
 version: '3.9'
 
 services:
+
+  # ── 1. CORE SIMULATOR (PHP/Apache) ──────────────────────────────────────────
+  # Hosts the localized PvPoke battle engine and the JavaScript web frontend.
+  # This container acts as the 'game world' that the AI will interact with.
   web:
     container_name: pvpoke
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
+      context: ..                        # Repository root directory
+      dockerfile: docker/Dockerfile.pvpoke
     ports:
-      - 80:80
+      - "80:80"                          # Map Host port 80 -> Container port 80
     volumes:
-      - ../src:/var/www/html/pvpoke/src
+      # Mount local JS/HTML files to enable live-reloading during development
+      - ../src:/var/www/html/pvpoke/src  
+    networks:
+      - ai-pvpoke
+    # Optional Healthcheck: Ensures the Apache server is actively serving requests
+    # Can be disabled if triggering 403 Forbidden errors due to missing DirectoryIndex
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+
+  # ── 2. AI BRIDGE SERVER (FastAPI / WebSockets) ──────────────────────────────
+  # Serves as the communication bridge between the JavaScript frontend and the 
+  # Python Reinforcement Learning agent. It maintains the WebSocket connections.
+  fastapi-prod:
+    container_name: pvpoke-fastapi-prod
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.agent-ai
+    depends_on:
+      - web                              # Ensures the simulator starts first
+    ports:
+      - "8000:8000"                      # Exposes ws://localhost:8000/ws to the Host
+    
+    # mainSocket:app refers to the FastAPI instance in mainSocket.py
+    command: ["uvicorn", "mainSocket:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      # Mount only the specific Python packages required for the API bridge
+      - ../PVPOKE/environment:/app/environment
+    networks:
+      - ai-pvpoke
+    environment:
+      # Internal Docker DNS: Allows FastAPI to resolve the simulator by service name
+      - PVPOKE_HOST=http://web:80
+
+
+# ── INTERNAL VIRTUAL NETWORK ──────────────────────────────────────────────────
+# Isolates the containers in a private bridge network.
+# Container-to-Container routing: http://web:80
+# Host-to-Container routing:      http://localhost:80
+networks:
+  ai-pvpoke:
+    driver: bridge
