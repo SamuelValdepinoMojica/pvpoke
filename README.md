@@ -1,7 +1,7 @@
 # PvPoke-RL: Deep Reinforcement Learning for Imperfect Information Games
 
-> **"Deep Reinforcement Learning for Robust Policy Optimization in Imperfect Information Games"**
-> Manuscript submitted for peer review — WITCOM 2026 · CIC-IPN · Mexico City
+> **"Tabular and Deep Reinforcement Learning in Imperfect Information Games"**
+> Published in *Telematics and Computing* (WITCOM 2026), Springer CCIS vol. 3228 · [DOI: 10.1007/978-3-032-42763-2_6](https://doi.org/10.1007/978-3-032-42763-2_6)
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://python.org)
 [![Gymnasium](https://img.shields.io/badge/Gymnasium-compatible-green)](https://gymnasium.farama.org)
@@ -27,7 +27,7 @@ The system bridges a JavaScript/PHP battle simulator with a Python DRL ecosystem
   - **PPO** → `ActionMasker` from `sb3_contrib` (native integration)
   - **DQN** → custom `MaskedDQN` with masked Q-values in the training loop and masked exploration
   - **A2C** → custom `MaskedA2CPolicy` with masking directly on actor logits
-- **Fog of war** — enemy move power and energy are hidden from the agent; only type and cooldown are observable, faithfully modeling POMDP partial observability.
+- **Partial observability** — in `minimal` mode (used in the paper), the agent observes HP, energy and shields for both sides, while buff/debuff modifiers and cooldown timers remain hidden. `full` mode adds species, types and move information, but hides the power and energy cost of the enemy's moves.
 - **TensorBoard support** — training metrics logged automatically for all algorithms.
 - **CLI-configurable training** — all hyperparameters configurable via command-line arguments.
 
@@ -51,7 +51,7 @@ The FastAPI server acts as a **message broker**: it does not process game logic.
 
 ## Baseline Results (1v1, paper experiments)
 
-> Results for 3v3 and random team reset are pending evaluation.
+> Setup: 1v1, `minimal` observation mode, action masking enabled, Mantine (agent) vs. Gligar (simulator AI), fixed across episodes. Results for 3v3 and random team reset are pending evaluation.
 
 | Algorithm | Win Rate | Convergence | Stability |
 |-----------|----------|-------------|-----------|
@@ -142,6 +142,8 @@ docker compose ps
 
 ### Step 3 — Set up your local Python environment
 
+From the repository root (`cd ..` if you are still in `docker/`):
+
 ```bash
 conda create -n pvpoke-rl python=3.10
 conda activate pvpoke-rl
@@ -150,20 +152,20 @@ pip install -r PVPOKE/environment/requirements.txt
 
 ### Step 4 — Train an agent
 
-All training scripts accept CLI arguments. Run with `--help` to see all options.
+All training scripts accept CLI arguments. Run with `--help` to see all options. Commands are run from the repository root.
 
 ```bash
 # PPO — recommended, fastest convergence (uses MaskablePPO + ActionMasker)
-python scripts/train_ppo.py --battle-format 1v1 --total-timesteps 500000
+python PVPOKE/scripts/train_ppo.py --battle-format 1v1 --total-timesteps 500000
 
 # DQN — custom masked Q-values in training loop
-python scripts/train_dqn.py --battle-format 1v1 --total-timesteps 500000
+python PVPOKE/scripts/train_dqn.py --battle-format 1v1 --total-timesteps 500000
 
 # A2C — custom masked actor logits
-python scripts/train_a2c.py --battle-format 1v1 --total-timesteps 500000
+python PVPOKE/scripts/train_a2c.py --battle-format 1v1 --total-timesteps 500000
 
 # Tabular Q-Learning — discrete observation mode
-python scripts/train_qlearning.py --battle-format 1v1 --bins 25 --train-episodes 20000
+python PVPOKE/scripts/train_qlearning.py --battle-format 1v1 --bins 25 --train-episodes 20000
 ```
 
 Models and TensorBoard logs are saved to `PVPOKE/outputs/{algo}/{run-name}/`.
@@ -178,13 +180,13 @@ tensorboard --logdir PVPOKE/outputs/ppo/ppo_run/logs
 
 ```bash
 # Evaluate PPO model
-python scripts/play.py --algo ppo --model-path PVPOKE/outputs/ppo/ppo_run/models/ppo_final_model.zip --episodes 30
+python PVPOKE/scripts/play.py --algo ppo --model-path PVPOKE/outputs/ppo/ppo_run/models/ppo_final_model.zip --episodes 30
 
 # Evaluate DQN model
-python scripts/play.py --algo dqn --model-path PVPOKE/outputs/dqn/dqn_run/models/dqn_final_model.zip --episodes 30
+python PVPOKE/scripts/play.py --algo dqn --model-path PVPOKE/outputs/dqn/dqn_run/models/dqn_final_model.zip --episodes 30
 
 # Evaluate A2C model
-python scripts/play.py --algo a2c --model-path PVPOKE/outputs/a2c/a2c_run/models/a2c_final_model.zip --episodes 30
+python PVPOKE/scripts/play.py --algo a2c --model-path PVPOKE/outputs/a2c/a2c_run/models/a2c_final_model.zip --episodes 30
 ```
 
 ---
@@ -231,7 +233,7 @@ Both the Python agent and the PvPoke JS simulator connect as named clients and c
 ## Repository Structure
 
 ```
-pvpoke-rl/
+pvpoke/
 ├── README.md
 ├── LICENSE
 ├── .gitignore
@@ -282,11 +284,25 @@ pvpoke-rl/
 
 ---
 
-## Research Manuscript (Under Review)
+## Citation
 
-> **"Deep Reinforcement Learning for Robust Policy Optimization in Imperfect Information Games"**
-> S. Valdespino-Mojica, R. Menchaca-Méndez, R. Menchaca-Méndez
-> Submitted to WITCOM 2026 — Centro de Investigación en Computación (CIC-IPN)
+If you use this environment, please cite:
+
+> S. Valdespino Mojica, R. Menchaca Méndez, R. Menchaca Méndez. "Tabular and Deep Reinforcement Learning in Imperfect Information Games." In *Telematics and Computing* (WITCOM 2026), Communications in Computer and Information Science, vol. 3228, pp. 103–116. Springer, Cham, 2027. https://doi.org/10.1007/978-3-032-42763-2_6
+
+```bibtex
+@inproceedings{valdespino2027tabular,
+  title     = {Tabular and Deep Reinforcement Learning in Imperfect Information Games},
+  author    = {Valdespino Mojica, Samuel and Menchaca M{\'e}ndez, Rolando and Menchaca M{\'e}ndez, Ricardo},
+  booktitle = {Telematics and Computing (WITCOM 2026)},
+  series    = {Communications in Computer and Information Science},
+  volume    = {3228},
+  pages     = {103--116},
+  publisher = {Springer, Cham},
+  year      = {2027},
+  doi       = {10.1007/978-3-032-42763-2_6}
+}
+```
 
 ## Training Curves
 
